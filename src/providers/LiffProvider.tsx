@@ -12,6 +12,8 @@ type LiffProfile = {
 type LiffContextType = {
   liff: typeof Liff | null;
   profile: LiffProfile | null;
+  ledgerId: string | null;
+  ledgerName: string | null;
   isReady: boolean;
   error: string | null;
 };
@@ -19,6 +21,8 @@ type LiffContextType = {
 const LiffContext = createContext<LiffContextType>({
   liff: null,
   profile: null,
+  ledgerId: null,
+  ledgerName: null,
   isReady: false,
   error: null,
 });
@@ -26,6 +30,8 @@ const LiffContext = createContext<LiffContextType>({
 export function LiffProvider({ children }: { children: React.ReactNode }) {
   const [liff, setLiff] = useState<typeof Liff | null>(null);
   const [profile, setProfile] = useState<LiffProfile | null>(null);
+  const [ledgerId, setLedgerId] = useState<string | null>(null);
+  const [ledgerName, setLedgerName] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,6 +47,19 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
           displayName: p.displayName,
           pictureUrl: p.pictureUrl ?? undefined,
         });
+
+        const res = await fetch("/api/user/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lineUserId: p.userId,
+            displayName: p.displayName,
+            pictureUrl: p.pictureUrl ?? null,
+          }),
+        });
+        const data = await res.json();
+        setLedgerId(data.ledgerId);
+        setLedgerName(data.ledgerName);
       } catch (e) {
         setError(e instanceof Error ? e.message : "LIFF init failed");
       } finally {
@@ -50,7 +69,7 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <LiffContext.Provider value={{ liff, profile, isReady, error }}>
+    <LiffContext.Provider value={{ liff, profile, ledgerId, ledgerName, isReady, error }}>
       {children}
     </LiffContext.Provider>
   );

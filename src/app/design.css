@@ -207,11 +207,11 @@
 .tab.tab--fab .fab {
   width: 52px; height: 52px;
   border-radius: 16px;
-  background: var(--yr-gradient-primary);
+  background: linear-gradient(180deg, #7CB9EC 0%, #518BC3 85.1%);
   color: #fff;
   display: grid; place-items: center;
   box-shadow: 0 6px 14px rgba(62,118,185,0.4), 0 1px 2px rgba(12,12,13,.15);
-  border: 1px solid rgba(12,12,13,.12);
+  border: none;
 }
 .tab.tab--fab span { color: var(--yr-fg-muted); margin-top: 2px; }
 

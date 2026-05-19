@@ -186,18 +186,16 @@ export default function AddExpense({
             </button>
           ))}
         </div>
-        <div style={{ height: 100 }} />
-      </div>
-
-      <div className="sticky-cta">
-        <button
-          className="btn btn--primary btn--block btn--lg"
-          onClick={submit}
-          disabled={!valid}
-          style={{ opacity: valid ? 1 : 0.5 }}
-        >
-          {editing ? "儲存修改" : `記下 NT$${fmt(amt)}`}
-        </button>
+        <div className="sticky-cta">
+          <button
+            className="btn btn--primary btn--block btn--lg"
+            onClick={submit}
+            disabled={!valid}
+            style={{ opacity: valid ? 1 : 0.5 }}
+          >
+            {editing ? "儲存修改" : `記下 NT$${fmt(amt)}`}
+          </button>
+        </div>
       </div>
     </>
   );

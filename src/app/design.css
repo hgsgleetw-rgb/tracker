@@ -113,7 +113,7 @@
 /* ── App shell ──────────────────────────────────────────────── */
 .app {
   position: relative;
-  min-height: 100dvh;
+  height: 100dvh;
   width: 100%;
   max-width: 430px;
   margin: 0 auto;
@@ -122,7 +122,7 @@
   flex-direction: column;
   font-family: var(--yr-font-sans);
   color: var(--yr-fg-strong);
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 /* Subscreen header (back, title, action) */

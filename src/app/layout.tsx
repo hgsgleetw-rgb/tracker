@@ -20,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-TW" className={`${geistSans.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-gray-50">
+    <html lang="zh-TW" className={`${geistSans.variable} h-dvh antialiased`}>
+      <body className="h-full overflow-hidden">
         <LiffProvider>{children}</LiffProvider>
       </body>
     </html>

@@ -31,7 +31,7 @@ export default function Members({
     let paid = 0, owed = 0, count = 0;
     expenses.forEach((e) => {
       if (e.payerId === mid) { paid += e.amount; count++; }
-      if (e.splitWith.includes(mid)) owed += e.amount / e.splitWith.length;
+      if (e.splitWith.includes(mid) && e.splitWith.length > 0) owed += e.amount / e.splitWith.length;
     });
     return { paid, owed: Math.round(owed), count };
   };

@@ -387,12 +387,10 @@ export default function App() {
           expense={expenses.find((e) => e.id === route.expense.id)}
           team={team}
           onClose={() => setRoute({ name: "tab" })}
-          onEdit={() =>
-            setRoute({
-              name: "edit",
-              editing: expenses.find((e) => e.id === route.expense.id)!,
-            })
-          }
+          onEdit={() => {
+            const exp = expenses.find((e) => e.id === route.expense.id);
+            if (exp) setRoute({ name: "edit", editing: exp });
+          }}
           onDelete={() => deleteExpense(route.expense.id)}
         />
       )}

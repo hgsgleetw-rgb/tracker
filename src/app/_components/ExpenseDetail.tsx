@@ -26,7 +26,7 @@ export default function ExpenseDetail({
   const splitMembers = expense.splitWith
     .map((id) => team.find((m) => m.id === id))
     .filter((m): m is Member => !!m);
-  const perPerson = Math.round(expense.amount / splitMembers.length);
+  const perPerson = splitMembers.length > 0 ? Math.round(expense.amount / splitMembers.length) : 0;
 
   return (
     <>

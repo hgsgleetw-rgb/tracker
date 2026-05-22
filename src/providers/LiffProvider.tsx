@@ -57,6 +57,7 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
             pictureUrl: p.pictureUrl ?? null,
           }),
         });
+        if (!res.ok) throw new Error(`user/sync failed: ${res.status}`);
         const data = await res.json();
         setLedgerId(data.ledgerId);
         setLedgerName(data.ledgerName);

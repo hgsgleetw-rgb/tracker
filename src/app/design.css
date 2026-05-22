@@ -442,9 +442,9 @@
   color: var(--yr-brand-500);
 }
 .kpi .v {
-  font: 700 20px/1 var(--yr-font-mono);
+  font: 700 26px/1 var(--yr-font-mono);
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   color: var(--yr-fg);
 }
 .kpi .sub {
@@ -467,7 +467,12 @@
 .trend-pill svg { flex: none; }
 .trend-pill--up    { background: var(--yr-warning-50);  color: var(--yr-warning-700); }
 .trend-pill--down  { background: var(--yr-success-50);  color: var(--yr-success-700); }
-.trend-pill--neutral { background: var(--yr-gray-100); color: var(--yr-fg-muted); }
+.trend-pill--neutral {
+  background: var(--yr-gray-100);
+  color: var(--yr-fg-muted);
+  width: 100%;
+  justify-content: flex-start;
+}
 
 /* Section title */
 .sec-title {
@@ -1236,24 +1241,24 @@ textarea.input { height: auto; min-height: 80px; padding: 12px 14px; line-height
 }
 .onb-feats li {
   display: grid;
-  grid-template-columns: 36px 1fr;
-  gap: 12px;
+  grid-template-columns: 44px 1fr;
+  gap: 16px;
   align-items: center;
 }
 .onb-feat-ico {
-  width: 36px; height: 36px;
-  border-radius: 10px;
+  width: 44px; height: 44px;
+  border-radius: 12px;
   display: grid; place-items: center;
   flex: none;
 }
 .onb-feats li b {
   display: block;
-  font: 700 13px/1.2 var(--yr-font-sans);
+  font: 600 15px/1.2 var(--yr-font-sans);
   color: var(--yr-fg);
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 }
 .onb-feats li small {
-  font: 500 11px/1.3 var(--yr-font-sans);
+  font: 500 13px/1.4 var(--yr-font-sans);
   color: var(--yr-fg-muted);
 }
 .onb-h2 {

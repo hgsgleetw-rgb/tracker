@@ -325,7 +325,9 @@ export default function App() {
     return (
       <div className="app">
         <CreateGroup
-          onCancel={state.groups.length > 0 ? () => setShowCreate(false) : null}
+          onCancel={
+            state.groups.some((g) => !g.isDemo) ? () => setShowCreate(false) : null
+          }
           onCreate={createGroup}
         />
       </div>

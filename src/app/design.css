@@ -1107,7 +1107,12 @@ textarea.input { height: auto; min-height: 80px; padding: 12px 14px; line-height
   padding: 8px 16px 30px;
   max-height: 80vh;
   overflow-y: auto;
-  animation: s-in 280ms var(--yr-ease-standard);
+  animation: gs-in 280ms var(--yr-ease-standard);
+}
+/* Flex-centered card: slide up only, no horizontal translate (see .sheet's s-in). */
+@keyframes gs-in {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
 }
 .gs-handle {
   width: 36px; height: 4px;

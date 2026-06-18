@@ -159,12 +159,13 @@ export default function App() {
       memberNames,
       userName: state.userName,
     });
+    // Creating a real group retires the demo example for good.
     setState((s) => ({
       ...s,
-      groups: [...s.groups, g],
+      groups: [...s.groups.filter((x) => !x.isDemo), g],
       activeGroupId: g.id,
     }));
-    sync(api.createGroup(g));
+    sync(api.createGroup(g)); // server also drops any demo group
     setShowCreate(false);
     setTab("home");
     pushToast({ title: "群組已建立", desc: name });
@@ -484,7 +485,7 @@ export default function App() {
 
       {showSwitcher && (
         <GroupSwitcher
-          groups={state.groups}
+          groups={state.groups.filter((g) => !g.isDemo)}
           activeId={state.activeGroupId}
           onClose={() => setShowSwitcher(false)}
           onSelect={switchGroup}

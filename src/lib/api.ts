@@ -73,4 +73,24 @@ export const api = {
       `/api/groups/${encodeURIComponent(groupId)}/members/${encodeURIComponent(memberId)}`,
       { method: "DELETE" }
     ),
+
+  invite: (groupId: string) =>
+    call<{ code: string }>(`/api/groups/${encodeURIComponent(groupId)}/invite`, {
+      method: "POST",
+    }),
+
+  joinPreview: (code: string) =>
+    call<{
+      groupId: string;
+      groupName: string;
+      alreadyMember: boolean;
+      members: { clientId: string; name: string; claimed: boolean; isMine: boolean }[];
+    }>(`/api/join/${encodeURIComponent(code)}`),
+
+  join: (code: string, body: { claimMemberId?: string; newName?: string }) =>
+    call<{ ok: boolean; groupId: string }>(`/api/join/${encodeURIComponent(code)}`, {
+      method: "POST",
+      body,
+    }),
 };
+

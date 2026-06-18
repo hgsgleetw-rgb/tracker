@@ -10,7 +10,8 @@ type GroupWithRelations = Prisma.GroupGetPayload<{
   };
 }>;
 
-function toClientGroup(g: GroupWithRelations): Group {
+// isMe is viewer-relative: the member occupied by the requesting user.
+function toClientGroup(g: GroupWithRelations, viewerUserId: string): Group {
   return {
     id: g.clientId,
     name: g.name,
@@ -22,7 +23,7 @@ function toClientGroup(g: GroupWithRelations): Group {
       name: m.name,
       zh: m.zh,
       tone: m.tone as Member["tone"],
-      isMe: m.isMe,
+      isMe: m.userId === viewerUserId,
     })),
     expenses: g.expenses.map((e) => ({
       id: e.clientId,
@@ -36,11 +37,11 @@ function toClientGroup(g: GroupWithRelations): Group {
   };
 }
 
-/** Full client-shaped AppState for a user. */
+/** Full client-shaped AppState — all groups the user participates in. */
 export async function loadAppState(userId: string): Promise<AppState> {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
   const groups = await prisma.group.findMany({
-    where: { userId },
+    where: { members: { some: { userId } } },
     orderBy: { position: "asc" },
     include: {
       members: { orderBy: { position: "asc" } },
@@ -52,31 +53,34 @@ export async function loadAppState(userId: string): Promise<AppState> {
     tutorialDone: user.tutorialDone,
     userName: user.userName,
     activeGroupId: user.activeGroupId,
-    groups: groups.map(toClientGroup),
+    groups: groups.map((g) => toClientGroup(g, userId)),
   };
 }
 
-/** Resolve a DB group id from a user + client group id, or null if not owned. */
+/**
+ * Resolve a DB group id from a client group id, granting access to ANY
+ * member of the group (not just its creator).
+ */
 export async function resolveGroupId(
   userId: string,
   clientGroupId: string
 ): Promise<string | null> {
-  const g = await prisma.group.findUnique({
-    where: { userId_clientId: { userId, clientId: clientGroupId } },
+  const g = await prisma.group.findFirst({
+    where: { clientId: clientGroupId, members: { some: { userId } } },
     select: { id: true },
   });
   return g?.id ?? null;
 }
 
-/** Persist a client-built Group (with team + expenses) into normalized tables. */
+/** Persist a client-built Group; link the "me" member to its creator. */
 export async function persistGroup(
-  userId: string,
+  creatorUserId: string,
   group: Group,
   position: number
 ): Promise<void> {
   await prisma.group.create({
     data: {
-      userId,
+      userId: creatorUserId,
       clientId: group.id,
       name: group.name,
       usePool: !!group.usePool,
@@ -91,6 +95,7 @@ export async function persistGroup(
           tone: m.tone,
           isMe: !!m.isMe,
           position: i,
+          userId: m.isMe ? creatorUserId : null,
         })),
       },
       expenses: {
@@ -143,4 +148,33 @@ export async function upsertExpense(dbGroupId: string, e: Expense): Promise<void
       });
     }
   });
+}
+
+const INVITE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no ambiguous chars
+
+/** Get the group's invite code, creating one if it doesn't exist yet. */
+export async function ensureInviteCode(dbGroupId: string): Promise<string> {
+  const g = await prisma.group.findUniqueOrThrow({
+    where: { id: dbGroupId },
+    select: { inviteCode: true },
+  });
+  if (g.inviteCode) return g.inviteCode;
+
+  // Retry on the rare unique collision.
+  for (let attempt = 0; attempt < 5; attempt++) {
+    let code = "";
+    const bytes = crypto.getRandomValues(new Uint8Array(8));
+    for (const b of bytes) code += INVITE_ALPHABET[b % INVITE_ALPHABET.length];
+    try {
+      const updated = await prisma.group.update({
+        where: { id: dbGroupId },
+        data: { inviteCode: code },
+        select: { inviteCode: true },
+      });
+      return updated.inviteCode!;
+    } catch {
+      // collision — try a new code
+    }
+  }
+  throw new Error("Could not generate invite code");
 }

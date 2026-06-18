@@ -17,23 +17,25 @@ model User {
   tutorialDone  Boolean  @default(false)
   activeGroupId String? // clientId of the active group
   createdAt     DateTime @default(now())
-  groups        Group[]
+  groups        Group[] // groups this user created
+  members       Member[] // member slots this user occupies across groups
 }
 
 // A splitting group ("帳本/群組"). Owned by one LINE user.
 model Group {
-  id        String    @id @default(cuid())
-  clientId  String // frontend-generated id, stable & unique per user
-  name      String
-  usePool   Boolean   @default(false)
-  isDemo    Boolean   @default(false)
-  pool      Int       @default(0)
-  position  Int       @default(0) // preserve creation order
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime  @default(now())
-  members   Member[]
-  expenses  Expense[]
+  id         String    @id @default(cuid())
+  clientId   String // frontend-generated id, stable & unique per creator
+  name       String
+  usePool    Boolean   @default(false)
+  isDemo     Boolean   @default(false)
+  pool       Int       @default(0)
+  position   Int       @default(0) // preserve creation order
+  inviteCode String?   @unique // share-link token; null until first invite
+  userId     String // creator
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  members    Member[]
+  expenses   Expense[]
 
   @@unique([userId, clientId])
 }
@@ -45,12 +47,15 @@ model Member {
   name     String
   zh       String
   tone     Int
-  isMe     Boolean @default(false)
+  isMe     Boolean @default(false) // creator-perspective flag; isMe is recomputed per viewer
   position Int     @default(0)
   groupId  String
   group    Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId   String? // the real LINE user occupying this slot (null = unclaimed label)
+  user     User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@unique([groupId, clientId])
+  @@index([userId])
 }
 
 // A single expense, split among one or more members.

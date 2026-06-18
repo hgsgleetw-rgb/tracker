@@ -5,11 +5,12 @@ import AppIcon from "./Icons";
 
 interface OnboardingProps {
   onComplete: (userName: string) => void;
+  defaultName?: string;
 }
 
-export default function Onboarding({ onComplete }: OnboardingProps) {
+export default function Onboarding({ onComplete, defaultName = "" }: OnboardingProps) {
   const [step, setStep] = useState(0);
-  const [name, setName] = useState("");
+  const [name, setName] = useState(defaultName);
 
   const finish = () => {
     const trimmed = name.trim();

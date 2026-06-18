@@ -6,49 +6,76 @@ datasource db {
   provider = "postgresql"
 }
 
+// A LINE user. Identity is verified server-side via the LINE access token.
 model User {
-  id          String        @id @default(cuid())
-  lineUserId  String        @unique
-  displayName String
-  pictureUrl  String?
-  createdAt   DateTime      @default(now())
-  ledgers     Ledger[]
+  id            String   @id @default(cuid())
+  lineUserId    String   @unique
+  displayName   String
+  pictureUrl    String?
+  userName      String   @default("") // name chosen during onboarding
+  onboarded     Boolean  @default(false)
+  tutorialDone  Boolean  @default(false)
+  activeGroupId String? // clientId of the active group
+  createdAt     DateTime @default(now())
+  groups        Group[]
 }
 
-model Ledger {
-  id           String        @id @default(cuid())
-  name         String
-  userId       String
-  user         User          @relation(fields: [userId], references: [id])
-  createdAt    DateTime      @default(now())
-  transactions Transaction[]
-  categories   Category[]
+// A splitting group ("帳本/群組"). Owned by one LINE user.
+model Group {
+  id        String    @id @default(cuid())
+  clientId  String // frontend-generated id, stable & unique per user
+  name      String
+  usePool   Boolean   @default(false)
+  isDemo    Boolean   @default(false)
+  pool      Int       @default(0)
+  position  Int       @default(0) // preserve creation order
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  members   Member[]
+  expenses  Expense[]
+
+  @@unique([userId, clientId])
 }
 
-model Category {
-  id           String        @id @default(cuid())
-  name         String
-  icon         String?
-  type         TransactionType
-  ledgerId     String
-  ledger       Ledger        @relation(fields: [ledgerId], references: [id])
-  transactions Transaction[]
+// A label within a group (e.g. "Jerry"). Not a real account.
+model Member {
+  id       String  @id @default(cuid())
+  clientId String // frontend id ("me", "m_xxx"), referenced by payerId/splits
+  name     String
+  zh       String
+  tone     Int
+  isMe     Boolean @default(false)
+  position Int     @default(0)
+  groupId  String
+  group    Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, clientId])
 }
 
-model Transaction {
-  id          String          @id @default(cuid())
-  amount      Decimal         @db.Decimal(12, 2)
-  type        TransactionType
-  note        String?
-  date        DateTime
-  categoryId  String
-  category    Category        @relation(fields: [categoryId], references: [id])
-  ledgerId    String
-  ledger      Ledger          @relation(fields: [ledgerId], references: [id])
-  createdAt   DateTime        @default(now())
+// A single expense, split among one or more members.
+model Expense {
+  id        String         @id @default(cuid())
+  clientId  String // frontend id ("e_xxx")
+  category  String
+  note      String         @default("")
+  amount    Int
+  payerId   String // member clientId
+  at        DateTime // when the expense happened
+  createdAt DateTime       @default(now())
+  groupId   String
+  group     Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  splits    ExpenseSplit[]
+
+  @@unique([groupId, clientId])
 }
 
-enum TransactionType {
-  INCOME
-  EXPENSE
+// Join row: which member shares an expense.
+model ExpenseSplit {
+  id        String  @id @default(cuid())
+  memberId  String // member clientId
+  expenseId String
+  expense   Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
+  @@unique([expenseId, memberId])
 }

@@ -28,6 +28,7 @@ import ExpenseDetail from "./ExpenseDetail";
 import Onboarding from "./Onboarding";
 import CreateGroup from "./CreateGroup";
 import GroupSwitcher from "./GroupSwitcher";
+import TutorialOverlay from "./TutorialOverlay";
 import AppIcon from "./Icons";
 
 type Tab = "home" | "history" | "settle" | "settings";
@@ -97,11 +98,20 @@ export default function App() {
     const demo = buildDemoGroup(userName);
     setState({
       onboarded: true,
-      tutorialDone: true,
+      tutorialDone: false,
       userName,
       activeGroupId: demo.id,
       groups: [demo],
     });
+  };
+
+  const skipTutorial = () => {
+    setState((s) => ({ ...s, tutorialDone: true }));
+  };
+
+  const finishTutorial = () => {
+    setState((s) => ({ ...s, tutorialDone: true }));
+    setShowCreate(true);
   };
 
   // ── Group mutations ─────────────────────────────────────────
@@ -330,6 +340,12 @@ export default function App() {
   }
 
   const showTabBar = route.name === "tab";
+  const showTutorial =
+    !state.tutorialDone &&
+    activeGroup?.isDemo &&
+    tab === "home" &&
+    route.name === "tab" &&
+    !showSwitcher;
 
   return (
     <div className="app">
@@ -404,6 +420,10 @@ export default function App() {
           onCreate={() => { setShowSwitcher(false); setShowCreate(true); }}
           onDelete={deleteGroup}
         />
+      )}
+
+      {showTutorial && (
+        <TutorialOverlay onSkip={skipTutorial} onFinish={finishTutorial} />
       )}
 
       <Toast toasts={toasts} />

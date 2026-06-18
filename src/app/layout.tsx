@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import "./design.css";
 import ErrorBoundary from "./_components/ErrorBoundary";
+import { LiffProvider } from "@/providers/LiffProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,7 +24,7 @@ export default function RootLayout({
     <html lang="zh-TW" className={`${geistSans.variable} h-dvh antialiased`}>
       <body className="h-full overflow-hidden">
         <ErrorBoundary>
-          {children}
+          <LiffProvider>{children}</LiffProvider>
         </ErrorBoundary>
       </body>
     </html>

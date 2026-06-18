@@ -6,8 +6,6 @@ import {
   Group,
   Expense,
   Member,
-  loadState,
-  saveState,
   defaultState,
   buildDemoGroup,
   buildEmptyGroup,
@@ -17,6 +15,8 @@ import {
   fmt,
   makeId,
 } from "./data";
+import { useLiff } from "@/providers/LiffProvider";
+import { api } from "@/lib/api";
 import { Toast, ToastItem } from "./Shared";
 import Dashboard from "./Dashboard";
 import History from "./History";
@@ -39,25 +39,60 @@ type Route =
   | { name: "topup" }
   | { name: "expense"; expense: Expense };
 
+type LoadPhase = "loading" | "ready" | "error";
+
 export default function App() {
+  const { isReady, error: liffError, profile } = useLiff();
+
   const [state, setState] = useState<AppState>(() => defaultState());
-  const [hydrated, setHydrated] = useState(false);
+  const [phase, setPhase] = useState<LoadPhase>("loading");
   const [tab, setTab] = useState<Tab>("home");
   const [route, setRoute] = useState<Route>({ name: "tab" });
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [showSwitcher, setShowSwitcher] = useState(false);
 
-  // Load from localStorage after mount
-  useEffect(() => {
-    setState(loadState());
-    setHydrated(true);
+  const pushToast = useCallback((t: Omit<ToastItem, "id">) => {
+    const id = Date.now() + Math.random();
+    setToasts((s) => [...s, { ...t, id }]);
+    setTimeout(() => setToasts((s) => s.filter((x) => x.id !== id)), 2400);
   }, []);
 
-  // Persist on every change
+  // Fire-and-forget server sync; surface a toast if it fails (optimistic UI).
+  const sync = useCallback(
+    (p: Promise<unknown>) => {
+      p.catch((e) => {
+        console.error("[sync]", e);
+        pushToast({ title: "⚠️ 同步失敗", desc: "稍後請重新整理確認" });
+      });
+    },
+    [pushToast]
+  );
+
+  // Load state from the server once LINE login is ready.
   useEffect(() => {
-    if (hydrated) saveState(state);
-  }, [state, hydrated]);
+    if (!isReady) return;
+    if (liffError) {
+      setPhase("error");
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const s = await api.getState();
+        if (!cancelled) {
+          setState(s);
+          setPhase("ready");
+        }
+      } catch (e) {
+        console.error("[getState]", e);
+        if (!cancelled) setPhase("error");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isReady, liffError]);
 
   const activeGroup: Group | undefined = state.groups.find(
     (g) => g.id === state.activeGroupId
@@ -73,15 +108,6 @@ export default function App() {
   const settleSuggestions = useMemo(
     () => computeSettlements(balances),
     [balances]
-  );
-
-  const pushToast = useCallback(
-    (t: Omit<ToastItem, "id">) => {
-      const id = Date.now() + Math.random();
-      setToasts((s) => [...s, { ...t, id }]);
-      setTimeout(() => setToasts((s) => s.filter((x) => x.id !== id)), 2400);
-    },
-    []
   );
 
   const updateActiveGroup = (mut: (g: Group) => Partial<Group>) => {
@@ -103,14 +129,17 @@ export default function App() {
       activeGroupId: demo.id,
       groups: [demo],
     });
+    sync(api.onboarding(userName, demo));
   };
 
   const skipTutorial = () => {
     setState((s) => ({ ...s, tutorialDone: true }));
+    sync(api.patchUser({ tutorialDone: true }));
   };
 
   const finishTutorial = () => {
     setState((s) => ({ ...s, tutorialDone: true }));
+    sync(api.patchUser({ tutorialDone: true }));
     setShowCreate(true);
   };
 
@@ -135,6 +164,7 @@ export default function App() {
       groups: [...s.groups, g],
       activeGroupId: g.id,
     }));
+    sync(api.createGroup(g));
     setShowCreate(false);
     setTab("home");
     pushToast({ title: "群組已建立", desc: name });
@@ -142,6 +172,7 @@ export default function App() {
 
   const switchGroup = (id: string) => {
     setState((s) => ({ ...s, activeGroupId: id }));
+    sync(api.patchUser({ activeGroupId: id }));
     setShowSwitcher(false);
     setTab("home");
     setRoute({ name: "tab" });
@@ -161,14 +192,17 @@ export default function App() {
         activeGroupId: s.activeGroupId === id ? next[0].id : s.activeGroupId,
       };
     });
+    sync(api.deleteGroup(id));
     setShowSwitcher(false);
   };
 
   // ── Expense mutations ───────────────────────────────────────
   const addExpense = (e: Expense) => {
+    const gid = state.activeGroupId;
     updateActiveGroup((g) => ({
       expenses: [e, ...g.expenses.filter((x) => x.id !== e.id)],
     }));
+    if (gid) sync(api.saveExpense(gid, e));
     pushToast({
       title: "已記帳",
       desc: `NT$${fmt(e.amount)} · ${CAT_BY_ID[e.category]?.label ?? e.category}`,
@@ -177,67 +211,99 @@ export default function App() {
   };
 
   const deleteExpense = (id: string) => {
+    const gid = state.activeGroupId;
     updateActiveGroup((g) => ({
       expenses: g.expenses.filter((e) => e.id !== id),
     }));
+    if (gid) sync(api.deleteExpense(gid, id));
     pushToast({ title: "已刪除" });
     setRoute({ name: "tab" });
   };
 
   const topUp = (amt: number) => {
+    const gid = state.activeGroupId;
     updateActiveGroup((g) => ({ pool: g.pool + amt }));
+    if (gid) sync(api.groupAction(gid, "topup", amt));
     pushToast({ title: "儲值成功", desc: `+NT$${fmt(amt)}` });
     setRoute({ name: "tab" });
   };
 
   const addMember = (name: string) => {
+    const gid = state.activeGroupId;
     const id = makeId("m");
     const tones: Member["tone"][] = [1, 2, 3, 4, 5, 6];
-    updateActiveGroup((g) => ({
-      team: [
-        ...g.team,
-        {
-          id,
-          name,
-          zh: name,
-          tone: tones[g.team.length % tones.length],
-        },
-      ],
-    }));
+    const member: Member = {
+      id,
+      name,
+      zh: name,
+      tone: tones[team.length % tones.length],
+    };
+    updateActiveGroup((g) => ({ team: [...g.team, member] }));
+    if (gid) sync(api.addMember(gid, member));
     pushToast({ title: "已新增成員", desc: name });
   };
 
   const removeMember = (id: string) => {
+    const gid = state.activeGroupId;
     updateActiveGroup((g) => ({
       team: g.team.filter((m) => m.id !== id),
     }));
+    if (gid) sync(api.removeMember(gid, id));
     pushToast({ title: "已移除" });
   };
 
   const clearAllData = () => {
     if (!confirm("確定要清除這個群組的所有紀錄？")) return;
+    const gid = state.activeGroupId;
     updateActiveGroup(() => ({ expenses: [], pool: 0 }));
+    if (gid) sync(api.groupAction(gid, "clear"));
     pushToast({ title: "已清除所有紀錄" });
   };
 
   const markAllPaid = () => {
     if (
-      !confirm(
-        "將所有支出歸零？這會清除歷史，但保留成員與池子餘額。"
-      )
+      !confirm("將所有支出歸零？這會清除歷史，但保留成員與池子餘額。")
     )
       return;
+    const gid = state.activeGroupId;
     updateActiveGroup(() => ({ expenses: [] }));
+    if (gid) sync(api.groupAction(gid, "markPaid"));
     pushToast({ title: "已標記為已結算" });
     setRoute({ name: "tab" });
     setTab("home");
   };
 
-  // ── Loading ─────────────────────────────────────────────────
-  if (!hydrated) {
+  // ── Loading / error gates ───────────────────────────────────
+  if (!isReady || phase === "loading") {
     return (
       <div className="app" style={{ justifyContent: "center", alignItems: "center" }}>
         <p style={{ color: "var(--yr-fg-subtle)", fontSize: 14 }}>載入中...</p>
+      </div>
+    );
+  }
+
+  if (phase === "error") {
+    return (
+      <div
+        className="app"
+        style={{ justifyContent: "center", alignItems: "center", gap: 16, padding: 24 }}
+      >
+        <p style={{ color: "var(--yr-fg-subtle)", fontSize: 14, textAlign: "center" }}>
+          {liffError ? "LINE 登入失敗" : "載入資料失敗"}，請重新整理再試一次。
+        </p>
+        <button
+          onClick={() => location.reload()}
+          style={{
+            padding: "10px 20px",
+            borderRadius: 12,
+            border: "none",
+            background: "var(--yr-accent, #4f46e5)",
+            color: "#fff",
+            fontSize: 14,
+          }}
+        >
+          重新整理
+        </button>
       </div>
     );
   }
@@ -246,7 +312,10 @@ export default function App() {
   if (!state.onboarded) {
     return (
       <div className="app">
-        <Onboarding onComplete={completeOnboarding} />
+        <Onboarding
+          onComplete={completeOnboarding}
+          defaultName={profile?.displayName ?? ""}
+        />
       </div>
     );
   }

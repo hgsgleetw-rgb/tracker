@@ -19,6 +19,7 @@ model User {
   createdAt     DateTime @default(now())
   groups        Group[] // groups this user created
   members       Member[] // member slots this user occupies across groups
+  joinRequests  JoinRequest[]
 }
 
 // A splitting group ("帳本/群組"). Owned by one LINE user.
@@ -36,8 +37,25 @@ model Group {
   createdAt  DateTime  @default(now())
   members    Member[]
   expenses   Expense[]
+  requests   JoinRequest[]
 
   @@unique([userId, clientId])
+}
+
+// A pending request to join a group via invite link; the group admin
+// (creator) approves or rejects. One open request per user per group.
+model JoinRequest {
+  id            String   @id @default(cuid())
+  groupId       String
+  group         Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  requesterName String // the requester's LINE display name
+  claimMemberId String? // member slot they want to claim (null = join as new)
+  newName       String? // chosen name when joining as a new member
+  createdAt     DateTime @default(now())
+
+  @@unique([groupId, userId])
 }
 
 // A label within a group (e.g. "Jerry"). Not a real account.

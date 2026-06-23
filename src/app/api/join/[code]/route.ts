@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { authenticate } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// Preview a group from an invite code: name + which member slots are open.
+// Preview a group from an invite code: name + open member slots + my status.
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ code: string }> }
@@ -18,10 +18,16 @@ export async function GET(
     if (!group) return NextResponse.json({ error: "邀請連結無效" }, { status: 404 });
 
     const alreadyMember = group.members.some((m) => m.userId === auth.user.id);
+    const pending = await prisma.joinRequest.findUnique({
+      where: { groupId_userId: { groupId: group.id, userId: auth.user.id } },
+      select: { id: true },
+    });
+
     return NextResponse.json({
       groupId: group.clientId,
       groupName: group.name,
       alreadyMember,
+      pending: !!pending,
       members: group.members.map((m) => ({
         clientId: m.clientId,
         name: m.name,
@@ -35,7 +41,7 @@ export async function GET(
   }
 }
 
-// Join the group: claim an existing member slot, or add yourself as new.
+// Submit a request to join — the group admin must approve it.
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ code: string }> }
@@ -55,51 +61,35 @@ export async function POST(
     });
     if (!group) return NextResponse.json({ error: "邀請連結無效" }, { status: 404 });
 
-    // Joining counts as onboarding — skip the intro/tutorial for new users.
-    const setActive = () =>
-      prisma.user.update({
-        where: { id: auth.user.id },
-        data: {
-          activeGroupId: group.clientId,
-          onboarded: true,
-          tutorialDone: true,
-          userName: auth.user.userName || auth.user.displayName,
-        },
-      });
-
-    // Already in this group — just switch to it.
+    // Already a member — just switch to the group.
     if (group.members.some((m) => m.userId === auth.user.id)) {
-      await setActive();
-      return NextResponse.json({ ok: true, groupId: group.clientId });
+      await prisma.user.update({
+        where: { id: auth.user.id },
+        data: { activeGroupId: group.clientId },
+      });
+      return NextResponse.json({ status: "member", groupId: group.clientId });
     }
 
     if (claimMemberId) {
       const target = group.members.find((m) => m.clientId === claimMemberId);
       if (!target) return NextResponse.json({ error: "找不到該成員" }, { status: 404 });
       if (target.userId) return NextResponse.json({ error: "該成員已被認領" }, { status: 409 });
-      await prisma.member.update({ where: { id: target.id }, data: { userId: auth.user.id } });
-      await setActive();
-      return NextResponse.json({ ok: true, groupId: group.clientId });
     }
 
-    // Join as a brand-new member.
-    const name = (newName || auth.user.displayName || "我").trim().slice(0, 20);
-    const tone = (group.members.length % 6) + 1;
-    const clientId = `m_${auth.user.id.slice(-6)}_${group.members.length}`;
-    await prisma.member.create({
-      data: {
+    // Create or refresh the pending request (one per user per group).
+    await prisma.joinRequest.upsert({
+      where: { groupId_userId: { groupId: group.id, userId: auth.user.id } },
+      update: { claimMemberId: claimMemberId ?? null, newName: newName ?? null },
+      create: {
         groupId: group.id,
-        clientId,
-        name,
-        zh: name,
-        tone,
-        isMe: false,
-        position: group.members.length,
         userId: auth.user.id,
+        requesterName: auth.user.displayName,
+        claimMemberId: claimMemberId ?? null,
+        newName: newName ?? null,
       },
     });
-    await setActive();
-    return NextResponse.json({ ok: true, groupId: group.clientId });
+
+    return NextResponse.json({ status: "pending", groupName: group.name });
   } catch (e) {
     console.error("[join POST]", e);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

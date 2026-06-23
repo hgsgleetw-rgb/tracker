@@ -2,21 +2,35 @@ import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import type { AppState, Group, Member, Expense } from "@/app/_components/data";
 
-// Shape of a Group row with its members + expenses + splits included.
+// Shape of a Group row with its members + expenses + splits + requests included.
 type GroupWithRelations = Prisma.GroupGetPayload<{
   include: {
     members: true;
     expenses: { include: { splits: true } };
+    requests: true;
   };
 }>;
 
+function requestLabel(
+  req: GroupWithRelations["requests"][number],
+  members: GroupWithRelations["members"]
+): string {
+  if (req.claimMemberId) {
+    const slot = members.find((m) => m.clientId === req.claimMemberId);
+    return `${req.requesterName} 想成為「${slot?.name ?? req.claimMemberId}」`;
+  }
+  return `${req.requesterName} 想以「${req.newName ?? req.requesterName}」加入`;
+}
+
 // isMe is viewer-relative: the member occupied by the requesting user.
 function toClientGroup(g: GroupWithRelations, viewerUserId: string): Group {
+  const isAdmin = g.userId === viewerUserId;
   return {
     id: g.clientId,
     name: g.name,
     usePool: g.usePool,
     isDemo: g.isDemo,
+    isAdmin,
     pool: g.pool,
     team: g.members.map((m) => ({
       id: m.clientId,
@@ -34,6 +48,10 @@ function toClientGroup(g: GroupWithRelations, viewerUserId: string): Group {
       amount: e.amount,
       splitWith: e.splits.map((s) => s.memberId),
     })),
+    // Only the admin needs to see (and act on) pending requests.
+    pendingRequests: isAdmin
+      ? g.requests.map((r) => ({ id: r.id, label: requestLabel(r, g.members) }))
+      : undefined,
   };
 }
 
@@ -46,7 +64,13 @@ export async function loadAppState(userId: string): Promise<AppState> {
     include: {
       members: { orderBy: { position: "asc" } },
       expenses: { orderBy: { at: "desc" }, include: { splits: true } },
+      requests: true,
     },
+  });
+  // Groups the user has applied to but isn't yet a member of.
+  const pendingReqs = await prisma.joinRequest.findMany({
+    where: { userId },
+    include: { group: { select: { name: true } } },
   });
   return {
     onboarded: user.onboarded,
@@ -54,6 +78,7 @@ export async function loadAppState(userId: string): Promise<AppState> {
     userName: user.userName,
     activeGroupId: user.activeGroupId,
     groups: groups.map((g) => toClientGroup(g, userId)),
+    pending: pendingReqs.map((r) => ({ groupName: r.group.name })),
   };
 }
 
@@ -147,6 +172,43 @@ export async function upsertExpense(dbGroupId: string, e: Expense): Promise<void
         },
       });
     }
+  });
+}
+
+/**
+ * Add a user to a group as a member — by claiming an open slot or as a new
+ * member. Used when an admin approves a join request.
+ */
+export async function addUserToGroup(
+  dbGroupId: string,
+  userId: string,
+  displayName: string,
+  opts: { claimMemberId?: string | null; newName?: string | null }
+): Promise<void> {
+  const members = await prisma.member.findMany({ where: { groupId: dbGroupId } });
+  if (members.some((m) => m.userId === userId)) return; // already in
+
+  if (opts.claimMemberId) {
+    const target = members.find((m) => m.clientId === opts.claimMemberId);
+    if (target && !target.userId) {
+      await prisma.member.update({ where: { id: target.id }, data: { userId } });
+      return;
+    }
+    // slot vanished or got claimed — fall through to joining as new
+  }
+  const name = (opts.newName || displayName || "我").trim().slice(0, 20);
+  const tone = (members.length % 6) + 1;
+  const clientId = `m_${userId.slice(-6)}_${members.length}`;
+  await prisma.member.create({
+    data: {
+      groupId: dbGroupId,
+      clientId,
+      name,
+      zh: name,
+      tone,
+      position: members.length,
+      userId,
+    },
   });
 }
 

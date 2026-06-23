@@ -84,13 +84,23 @@ export const api = {
       groupId: string;
       groupName: string;
       alreadyMember: boolean;
+      pending: boolean;
       members: { clientId: string; name: string; claimed: boolean; isMine: boolean }[];
     }>(`/api/join/${encodeURIComponent(code)}`),
 
   join: (code: string, body: { claimMemberId?: string; newName?: string }) =>
-    call<{ ok: boolean; groupId: string }>(`/api/join/${encodeURIComponent(code)}`, {
-      method: "POST",
-      body,
-    }),
+    call<{ status: "member" | "pending"; groupId?: string; groupName?: string }>(
+      `/api/join/${encodeURIComponent(code)}`,
+      { method: "POST", body }
+    ),
+
+  requestAction: (groupId: string, reqId: string, action: "approve" | "reject") =>
+    call(
+      `/api/groups/${encodeURIComponent(groupId)}/requests/${encodeURIComponent(reqId)}`,
+      { method: "POST", body: { action } }
+    ),
+
+  leaveGroup: (groupId: string) =>
+    call(`/api/groups/${encodeURIComponent(groupId)}/leave`, { method: "POST" }),
 };
 

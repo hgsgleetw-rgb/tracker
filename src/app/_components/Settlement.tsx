@@ -9,6 +9,7 @@ interface SettlementProps {
   team: Member[];
   balances: Record<string, number>;
   settleSuggestions: Transfer[];
+  isAdmin: boolean;
   onBack: () => void;
   onMarkPaid: () => void;
   onAddMember: (name: string) => void;
@@ -19,6 +20,7 @@ export default function Settlement({
   team,
   balances,
   settleSuggestions,
+  isAdmin,
   onBack,
   onMarkPaid,
   onAddMember,
@@ -94,7 +96,7 @@ export default function Settlement({
         <div className="list">
           {sorted.map((m) => {
             const net = balances[m.id] || 0;
-            const removable = !m.isMe && net === 0;
+            const removable = isAdmin && !m.isMe && net === 0;
             return (
               <div key={m.id} className="mem-row">
                 <Avatar member={m} size="lg" />

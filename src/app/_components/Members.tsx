@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Member, Expense, fmt, fmtSigned } from "./data";
+import { Member, Expense, JoinRequestInfo, fmt, fmtSigned } from "./data";
 import { Avatar } from "./Shared";
 import AppIcon from "./Icons";
 
@@ -9,22 +9,32 @@ interface MembersProps {
   team: Member[];
   balances: Record<string, number>;
   expenses: Expense[];
+  isAdmin: boolean;
+  pendingRequests: JoinRequestInfo[];
   onBack: () => void;
   onAdd: (name: string) => void;
   onRemove: (id: string) => void;
   onClearData: () => void;
   onInvite: () => void;
+  onApprove: (reqId: string) => void;
+  onReject: (reqId: string) => void;
+  onLeave: () => void;
 }
 
 export default function Members({
   team,
   balances,
   expenses,
+  isAdmin,
+  pendingRequests,
   onBack,
   onAdd,
   onRemove,
   onClearData,
   onInvite,
+  onApprove,
+  onReject,
+  onLeave,
 }: MembersProps) {
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
@@ -78,7 +88,7 @@ export default function Members({
                 >
                   {net === 0 ? "—" : fmtSigned(net)}
                 </div>
-                {!m.isMe ? (
+                {isAdmin && !m.isMe ? (
                   <button
                     className="icon-btn"
                     style={{
@@ -137,6 +147,38 @@ export default function Members({
           </div>
         )}
 
+        {isAdmin && pendingRequests.length > 0 && (
+          <>
+            <div className="sec-title">
+              <h3>待核准 ({pendingRequests.length})</h3>
+            </div>
+            <div className="card" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {pendingRequests.map((r) => (
+                <div
+                  key={r.id}
+                  style={{ display: "flex", alignItems: "center", gap: 8 }}
+                >
+                  <div style={{ flex: 1, fontSize: 13 }}>{r.label}</div>
+                  <button
+                    className="btn btn--secondary"
+                    style={{ padding: "6px 12px" }}
+                    onClick={() => onReject(r.id)}
+                  >
+                    拒絕
+                  </button>
+                  <button
+                    className="btn btn--primary"
+                    style={{ padding: "6px 12px" }}
+                    onClick={() => onApprove(r.id)}
+                  >
+                    核准
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
         <div className="sec-title">
           <h3>邀請</h3>
         </div>
@@ -148,27 +190,48 @@ export default function Members({
             className="muted"
             style={{ fontSize: 11, marginTop: 8, textAlign: "center" }}
           >
-            複製連結後貼到 LINE 傳給朋友，對方點開就能一起記帳
+            複製連結後貼到 LINE 傳給朋友，對方點開申請、由你核准就能一起記帳
           </div>
         </div>
 
-        <div className="sec-title">
-          <h3>資料</h3>
-        </div>
-        <div className="card">
-          <button
-            className="btn btn--danger btn--block"
-            onClick={onClearData}
-          >
-            <AppIcon name="trash" size={16} /> 清除所有紀錄
-          </button>
-          <div
-            className="muted"
-            style={{ fontSize: 11, marginTop: 8, textAlign: "center" }}
-          >
-            將清除所有支出與儲值資料（無法復原）
-          </div>
-        </div>
+        {isAdmin ? (
+          <>
+            <div className="sec-title">
+              <h3>資料</h3>
+            </div>
+            <div className="card">
+              <button
+                className="btn btn--danger btn--block"
+                onClick={onClearData}
+              >
+                <AppIcon name="trash" size={16} /> 清除所有紀錄
+              </button>
+              <div
+                className="muted"
+                style={{ fontSize: 11, marginTop: 8, textAlign: "center" }}
+              >
+                將清除所有支出與儲值資料（無法復原）
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="sec-title">
+              <h3>群組</h3>
+            </div>
+            <div className="card">
+              <button className="btn btn--danger btn--block" onClick={onLeave}>
+                <AppIcon name="back" size={16} /> 退出群組
+              </button>
+              <div
+                className="muted"
+                style={{ fontSize: 11, marginTop: 8, textAlign: "center" }}
+              >
+                你將離開這個群組，紀錄會保留給其他成員
+              </div>
+            </div>
+          </>
+        )}
 
         <div style={{ height: 30 }} />
         <div

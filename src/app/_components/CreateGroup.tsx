@@ -75,9 +75,11 @@ export default function CreateGroup({ onCancel, onCreate }: CreateGroupProps) {
           </div>
 
           <div style={{ height: 24 }} />
-          <h3 className="onb-sub-h">先加幾個成員（可跳過）</h3>
+          <h3 className="onb-sub-h">先加幾個掛名成員（可跳過）</h3>
           <p className="onb-p" style={{ marginTop: -2, marginBottom: 12 }}>
-            可以之後再加。
+            這裡加的是「掛名成員」，適合不會用 App 的人（由你幫他記）。
+            <br />
+            想邀請會用 App 的朋友一起記，建立群組後到「成員 → 邀請朋友加入」傳連結給他們。
           </p>
           <div style={{ display: "flex", gap: 8 }}>
             <input

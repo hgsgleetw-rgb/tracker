@@ -14,6 +14,8 @@ export async function POST(request: Request) {
 
     const count = await prisma.group.count({ where: { userId: auth.user.id } });
     await persistGroup(auth.user.id, group, count);
+    // The demo example is tutorial-only; retire it once a real group exists.
+    await prisma.group.deleteMany({ where: { userId: auth.user.id, isDemo: true } });
     await prisma.user.update({
       where: { id: auth.user.id },
       data: { activeGroupId: group.id },

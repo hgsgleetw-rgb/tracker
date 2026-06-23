@@ -13,6 +13,7 @@ interface MembersProps {
   onAdd: (name: string) => void;
   onRemove: (id: string) => void;
   onClearData: () => void;
+  onInvite: () => void;
 }
 
 export default function Members({
@@ -23,6 +24,7 @@ export default function Members({
   onAdd,
   onRemove,
   onClearData,
+  onInvite,
 }: MembersProps) {
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
@@ -134,6 +136,21 @@ export default function Members({
             </div>
           </div>
         )}
+
+        <div className="sec-title">
+          <h3>邀請</h3>
+        </div>
+        <div className="card">
+          <button className="btn btn--primary btn--block" onClick={onInvite}>
+            <AppIcon name="users" size={16} /> 邀請朋友加入
+          </button>
+          <div
+            className="muted"
+            style={{ fontSize: 11, marginTop: 8, textAlign: "center" }}
+          >
+            複製連結後貼到 LINE 傳給朋友，對方點開就能一起記帳
+          </div>
+        </div>
 
         <div className="sec-title">
           <h3>資料</h3>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   AppState,
   Group,
@@ -27,6 +27,7 @@ import TopUp from "./TopUp";
 import ExpenseDetail from "./ExpenseDetail";
 import Onboarding from "./Onboarding";
 import CreateGroup from "./CreateGroup";
+import JoinGroup from "./JoinGroup";
 import GroupSwitcher from "./GroupSwitcher";
 import TutorialOverlay from "./TutorialOverlay";
 import AppIcon from "./Icons";
@@ -42,7 +43,7 @@ type Route =
 type LoadPhase = "loading" | "ready" | "error";
 
 export default function App() {
-  const { isReady, error: liffError, profile } = useLiff();
+  const { liff, isReady, error: liffError, profile } = useLiff();
 
   const [state, setState] = useState<AppState>(() => defaultState());
   const [phase, setPhase] = useState<LoadPhase>("loading");
@@ -51,6 +52,8 @@ export default function App() {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [showSwitcher, setShowSwitcher] = useState(false);
+  const [joinCode, setJoinCode] = useState<string | null>(null);
+  const pendingSyncs = useRef(0);
 
   const pushToast = useCallback((t: Omit<ToastItem, "id">) => {
     const id = Date.now() + Math.random();
@@ -59,15 +62,31 @@ export default function App() {
   }, []);
 
   // Fire-and-forget server sync; surface a toast if it fails (optimistic UI).
+  // Track in-flight syncs so polling never clobbers an unsynced local change.
   const sync = useCallback(
     (p: Promise<unknown>) => {
+      pendingSyncs.current++;
       p.catch((e) => {
         console.error("[sync]", e);
         pushToast({ title: "⚠️ 同步失敗", desc: "稍後請重新整理確認" });
+      }).finally(() => {
+        pendingSyncs.current = Math.max(0, pendingSyncs.current - 1);
       });
     },
     [pushToast]
   );
+
+  // Pick up an invite code from the LIFF launch URL (?join=... or liff.state).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    let code = sp.get("join");
+    if (!code) {
+      const ls = sp.get("liff.state");
+      if (ls) code = new URLSearchParams(ls.startsWith("?") ? ls.slice(1) : ls).get("join");
+    }
+    if (code) setJoinCode(code);
+  }, []);
 
   // Load state from the server once LINE login is ready.
   useEffect(() => {
@@ -93,6 +112,23 @@ export default function App() {
       cancelled = true;
     };
   }, [isReady, liffError]);
+
+  // Poll the server so members see each other's updates (~near real-time).
+  const hasRealGroup = state.groups.some((g) => !g.isDemo);
+  useEffect(() => {
+    if (phase !== "ready" || !state.onboarded || joinCode || !hasRealGroup) return;
+    const iv = setInterval(async () => {
+      if (pendingSyncs.current > 0) return; // don't overwrite unsynced edits
+      if (typeof document !== "undefined" && document.hidden) return;
+      try {
+        const s = await api.getState();
+        if (pendingSyncs.current === 0) setState(s);
+      } catch {
+        /* transient; next tick retries */
+      }
+    }, 4000);
+    return () => clearInterval(iv);
+  }, [phase, state.onboarded, joinCode, hasRealGroup]);
 
   const activeGroup: Group | undefined = state.groups.find(
     (g) => g.id === state.activeGroupId
@@ -159,12 +195,13 @@ export default function App() {
       memberNames,
       userName: state.userName,
     });
+    // Creating a real group retires the demo example for good.
     setState((s) => ({
       ...s,
-      groups: [...s.groups, g],
+      groups: [...s.groups.filter((x) => !x.isDemo), g],
       activeGroupId: g.id,
     }));
-    sync(api.createGroup(g));
+    sync(api.createGroup(g)); // server also drops any demo group
     setShowCreate(false);
     setTab("home");
     pushToast({ title: "群組已建立", desc: name });
@@ -273,6 +310,58 @@ export default function App() {
     setTab("home");
   };
 
+  // ── Invite / join ───────────────────────────────────────────
+  const clearJoinFromUrl = () => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("join");
+    url.searchParams.delete("liff.state");
+    window.history.replaceState({}, "", url.pathname + url.search);
+  };
+
+  const inviteToGroup = async () => {
+    const gid = state.activeGroupId;
+    if (!gid) return;
+    try {
+      const { code } = await api.invite(gid);
+      const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
+      const link = `https://liff.line.me/${liffId}/?join=${code}`;
+      let shared = false;
+      if (liff && liff.isApiAvailable("shareTargetPicker")) {
+        shared = await liff
+          .shareTargetPicker([{ type: "text", text: `一起來記帳吧！${link}` }])
+          .then(() => true)
+          .catch(() => false);
+      }
+      if (!shared) {
+        await navigator.clipboard.writeText(link);
+        pushToast({ title: "邀請連結已複製", desc: "貼到 LINE 傳給朋友" });
+      }
+    } catch (e) {
+      console.error("[invite]", e);
+      pushToast({ title: "產生邀請連結失敗" });
+    }
+  };
+
+  const handleJoined = async (groupId: string) => {
+    setJoinCode(null);
+    clearJoinFromUrl();
+    try {
+      const s = await api.getState();
+      setState({ ...s, activeGroupId: groupId });
+    } catch {
+      /* polling/load will reconcile */
+    }
+    setTab("home");
+    setRoute({ name: "tab" });
+    pushToast({ title: "已加入群組" });
+  };
+
+  const cancelJoin = () => {
+    setJoinCode(null);
+    clearJoinFromUrl();
+  };
+
   // ── Loading / error gates ───────────────────────────────────
   if (!isReady || phase === "loading") {
     return (
@@ -308,6 +397,15 @@ export default function App() {
     );
   }
 
+  // ── Join via invite link (takes priority over onboarding) ──
+  if (joinCode) {
+    return (
+      <div className="app">
+        <JoinGroup code={joinCode} onJoined={handleJoined} onCancel={cancelJoin} />
+      </div>
+    );
+  }
+
   // ── Onboarding gate ─────────────────────────────────────────
   if (!state.onboarded) {
     return (
@@ -325,7 +423,9 @@ export default function App() {
     return (
       <div className="app">
         <CreateGroup
-          onCancel={state.groups.length > 0 ? () => setShowCreate(false) : null}
+          onCancel={
+            state.groups.some((g) => !g.isDemo) ? () => setShowCreate(false) : null
+          }
           onCreate={createGroup}
         />
       </div>
@@ -403,6 +503,7 @@ export default function App() {
           onAdd={addMember}
           onRemove={removeMember}
           onClearData={clearAllData}
+          onInvite={inviteToGroup}
         />
       );
     }
@@ -482,7 +583,7 @@ export default function App() {
 
       {showSwitcher && (
         <GroupSwitcher
-          groups={state.groups}
+          groups={state.groups.filter((g) => !g.isDemo)}
           activeId={state.activeGroupId}
           onClose={() => setShowSwitcher(false)}
           onSelect={switchGroup}

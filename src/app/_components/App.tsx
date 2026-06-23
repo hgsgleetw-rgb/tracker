@@ -113,10 +113,12 @@ export default function App() {
     };
   }, [isReady, liffError]);
 
-  // Poll the server so members see each other's updates (~near real-time).
+  // Poll the server so members see each other's updates (~near real-time),
+  // and so a pending applicant flips in automatically once approved.
   const hasRealGroup = state.groups.some((g) => !g.isDemo);
+  const hasPending = !!state.pending?.length;
   useEffect(() => {
-    if (phase !== "ready" || !state.onboarded || joinCode || !hasRealGroup) return;
+    if (phase !== "ready" || joinCode || (!hasRealGroup && !hasPending)) return;
     const iv = setInterval(async () => {
       if (pendingSyncs.current > 0) return; // don't overwrite unsynced edits
       if (typeof document !== "undefined" && document.hidden) return;
@@ -128,7 +130,7 @@ export default function App() {
       }
     }, 4000);
     return () => clearInterval(iv);
-  }, [phase, state.onboarded, joinCode, hasRealGroup]);
+  }, [phase, state.onboarded, joinCode, hasRealGroup, hasPending]);
 
   const activeGroup: Group | undefined = state.groups.find(
     (g) => g.id === state.activeGroupId
@@ -364,6 +366,43 @@ export default function App() {
     clearJoinFromUrl();
   };
 
+  const approveRequest = (reqId: string) => {
+    const gid = state.activeGroupId;
+    if (!gid) return;
+    if (!confirm("核准這位成員加入群組？")) return;
+    updateActiveGroup((g) => ({
+      pendingRequests: (g.pendingRequests ?? []).filter((r) => r.id !== reqId),
+    }));
+    sync(api.requestAction(gid, reqId, "approve"));
+    pushToast({ title: "已核准加入" });
+  };
+
+  const rejectRequest = (reqId: string) => {
+    const gid = state.activeGroupId;
+    if (!gid) return;
+    if (!confirm("拒絕這個加入申請？")) return;
+    updateActiveGroup((g) => ({
+      pendingRequests: (g.pendingRequests ?? []).filter((r) => r.id !== reqId),
+    }));
+    sync(api.requestAction(gid, reqId, "reject"));
+    pushToast({ title: "已拒絕" });
+  };
+
+  const leaveGroup = () => {
+    const gid = state.activeGroupId;
+    if (!gid) return;
+    if (!confirm("確定要退出這個群組？")) return;
+    setState((s) => {
+      const next = s.groups.filter((g) => g.id !== gid);
+      return { ...s, groups: next, activeGroupId: next[0]?.id ?? null };
+    });
+    sync(api.leaveGroup(gid));
+    setShowSwitcher(false);
+    setTab("home");
+    setRoute({ name: "tab" });
+    pushToast({ title: "已退出群組" });
+  };
+
   // ── Loading / error gates ───────────────────────────────────
   if (!isReady || phase === "loading") {
     return (
@@ -404,6 +443,27 @@ export default function App() {
     return (
       <div className="app">
         <JoinGroup code={joinCode} onJoined={handleJoined} onCancel={cancelJoin} />
+      </div>
+    );
+  }
+
+  // ── Waiting for approval (applicant with no groups yet) ──────
+  if (state.groups.length === 0 && hasPending) {
+    return (
+      <div className="app">
+        <div className="onb">
+          <div className="onb-body">
+            <div className="onb-step" style={{ textAlign: "center", paddingTop: 40 }}>
+              <div className="onb-mark">
+                <AppIcon name="clock" size={32} color="#fff" />
+              </div>
+              <h2 className="onb-h2">等待核准中</h2>
+              <p className="onb-p">
+                「{state.pending?.[0]?.groupName}」的管理員核准後，會自動帶你進群組。
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -490,6 +550,7 @@ export default function App() {
           team={team}
           balances={balances}
           settleSuggestions={settleSuggestions}
+          isAdmin={activeGroup?.isAdmin ?? false}
           onBack={() => setTab("home")}
           onMarkPaid={markAllPaid}
           onAddMember={addMember}
@@ -502,11 +563,16 @@ export default function App() {
           team={team}
           balances={balances}
           expenses={expenses}
+          isAdmin={activeGroup?.isAdmin ?? false}
+          pendingRequests={activeGroup?.pendingRequests ?? []}
           onBack={() => setTab("home")}
           onAdd={addMember}
           onRemove={removeMember}
           onClearData={clearAllData}
           onInvite={inviteToGroup}
+          onApprove={approveRequest}
+          onReject={rejectRequest}
+          onLeave={leaveGroup}
         />
       );
     }

@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { authenticate } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { resolveGroupId } from "@/lib/state";
 
-// Remove a member from a group.
+// Remove a member from a group. Admin (group creator) only.
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string; memberId: string }> }
@@ -12,10 +11,13 @@ export async function DELETE(
   if (!auth.ok) return auth.response;
   const { id, memberId } = await params;
   try {
-    const dbGroupId = await resolveGroupId(auth.user.id, id);
-    if (!dbGroupId) return NextResponse.json({ error: "Group not found" }, { status: 404 });
+    const group = await prisma.group.findFirst({
+      where: { clientId: id, userId: auth.user.id }, // userId == creator == admin
+      select: { id: true },
+    });
+    if (!group) return NextResponse.json({ error: "沒有權限" }, { status: 403 });
 
-    await prisma.member.deleteMany({ where: { groupId: dbGroupId, clientId: memberId } });
+    await prisma.member.deleteMany({ where: { groupId: group.id, clientId: memberId } });
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("[members DELETE]", e);

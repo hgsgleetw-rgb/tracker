@@ -31,14 +31,25 @@ export interface Transfer {
   amount: number;
 }
 
+export interface JoinRequestInfo {
+  id: string;
+  label: string; // e.g. "Bob 想以新成員加入" / "Bob 想成為 Jerry"
+}
+
 export interface Group {
   id: string;
   name: string;
   usePool: boolean;
   isDemo?: boolean;
+  isAdmin?: boolean; // viewer is the group creator/admin
   team: Member[];
   expenses: Expense[];
   pool: number;
+  pendingRequests?: JoinRequestInfo[]; // populated for admins only
+}
+
+export interface PendingJoin {
+  groupName: string;
 }
 
 export interface AppState {
@@ -47,6 +58,7 @@ export interface AppState {
   userName: string;
   activeGroupId: string | null;
   groups: Group[];
+  pending?: PendingJoin[]; // groups the user has applied to but not yet approved
 }
 
 export const CATEGORIES: Category[] = [

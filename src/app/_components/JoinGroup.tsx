@@ -18,6 +18,7 @@ export default function JoinGroup({ code, onJoined, onCancel }: JoinGroupProps) 
   const [preview, setPreview] = useState<Preview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [newName, setNewName] = useState(profile?.displayName ?? "");
 
   useEffect(() => {
@@ -40,7 +41,12 @@ export default function JoinGroup({ code, onJoined, onCancel }: JoinGroupProps) 
     setBusy(true);
     try {
       const res = await api.join(code, body);
-      onJoined(res.groupId);
+      if (res.status === "member" && res.groupId) {
+        onJoined(res.groupId);
+      } else {
+        setSubmitted(true); // pending admin approval
+        setBusy(false);
+      }
     } catch {
       setError("加入失敗，請再試一次");
       setBusy(false);
@@ -92,6 +98,30 @@ export default function JoinGroup({ code, onJoined, onCancel }: JoinGroupProps) 
             onClick={() => doJoin({})}
           >
             進入群組
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Request submitted (or already pending) — waiting for admin approval.
+  if (submitted || preview.pending) {
+    return (
+      <div className="onb">
+        <div className="onb-body">
+          <div className="onb-step" style={{ textAlign: "center", paddingTop: 40 }}>
+            <div className="onb-mark">
+              <AppIcon name="clock" size={32} color="#fff" />
+            </div>
+            <h2 className="onb-h2">申請已送出</h2>
+            <p className="onb-p">
+              「{preview.groupName}」的管理員核准後，你就會自動進入群組。
+            </p>
+          </div>
+        </div>
+        <div className="onb-foot">
+          <button className="btn btn--primary btn--block btn--lg" onClick={onCancel}>
+            知道了
           </button>
         </div>
       </div>

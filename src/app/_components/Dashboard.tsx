@@ -23,6 +23,7 @@ interface DashboardProps {
   groupName: string;
   usePool: boolean;
   onTab: (tab: string) => void;
+  onAdd: () => void;
   onTopUp: () => void;
   onOpenExpense: (e: Expense) => void;
   openSettlement: () => void;
@@ -39,6 +40,7 @@ export default function Dashboard({
   groupName,
   usePool,
   onTab,
+  onAdd,
   onTopUp,
   onOpenExpense,
   openSettlement,
@@ -200,15 +202,20 @@ export default function Dashboard({
       {/* ── Main content ──────────────────────────────────── */}
       <div className="main main--hero">
         {expenses.length === 0 && (
-          <div className="empty" style={{ marginBottom: 8 }}>
+          <button
+            type="button"
+            className="empty empty--cta"
+            onClick={onAdd}
+            style={{ marginBottom: 8, display: "block", width: "100%", border: 0, background: "transparent", cursor: "pointer" }}
+          >
             <div className="e-ico">
               <AppIcon name="plus" size={26} strokeWidth={2.4} />
             </div>
             <div className="e-t">記下第一筆吧</div>
             <div className="e-d">
-              點下方 ＋ 記錄一筆支出，系統會自動算誰欠誰
+              點這裡記錄第一筆支出，系統會自動算誰欠誰
             </div>
-          </div>
+          </button>
         )}
 
         {expenses.length > 0 && (

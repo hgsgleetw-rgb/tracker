@@ -281,12 +281,14 @@ export default function App() {
   };
 
   const removeMember = (id: string) => {
+    const member = team.find((m) => m.id === id);
+    if (!confirm(`確定要移除成員${member ? `「${member.zh}」` : ""}？`)) return;
     const gid = state.activeGroupId;
     updateActiveGroup((g) => ({
       team: g.team.filter((m) => m.id !== id),
     }));
     if (gid) sync(api.removeMember(gid, id));
-    pushToast({ title: "已移除" });
+    pushToast({ title: "已移除", desc: member?.zh });
   };
 
   const clearAllData = () => {
@@ -465,6 +467,7 @@ export default function App() {
           groupName={activeGroup?.name ?? ""}
           usePool={activeGroup?.usePool ?? false}
           onTab={(t) => setTab(t as Tab)}
+          onAdd={() => setRoute({ name: "add" })}
           onTopUp={() => setRoute({ name: "topup" })}
           onOpenExpense={(e) => setRoute({ name: "expense", expense: e })}
           openSettlement={() => setTab("settle")}

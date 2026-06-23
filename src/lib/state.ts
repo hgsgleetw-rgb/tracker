@@ -38,6 +38,8 @@ function toClientGroup(g: GroupWithRelations, viewerUserId: string): Group {
       zh: m.zh,
       tone: m.tone as Member["tone"],
       isMe: m.userId === viewerUserId,
+      isUser: m.userId !== null,
+      isAdmin: m.userId !== null && m.userId === g.userId,
     })),
     expenses: g.expenses.map((e) => ({
       id: e.clientId,

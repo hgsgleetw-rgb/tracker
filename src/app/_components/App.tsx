@@ -388,6 +388,16 @@ export default function App() {
     pushToast({ title: "已拒絕" });
   };
 
+  const transferAdmin = (memberId: string) => {
+    const gid = state.activeGroupId;
+    if (!gid) return;
+    const m = team.find((x) => x.id === memberId);
+    if (!confirm(`要把管理員轉給「${m?.zh ?? ""}」？轉移後你會變成一般成員。`)) return;
+    // Re-fetch so admin/member flags update for the whole group.
+    sync(api.transferAdmin(gid, memberId).then(() => api.getState()).then(setState));
+    pushToast({ title: "已轉移管理員", desc: m?.zh });
+  };
+
   const leaveGroup = () => {
     const gid = state.activeGroupId;
     if (!gid) return;
@@ -573,6 +583,7 @@ export default function App() {
           onApprove={approveRequest}
           onReject={rejectRequest}
           onLeave={leaveGroup}
+          onTransferAdmin={transferAdmin}
         />
       );
     }

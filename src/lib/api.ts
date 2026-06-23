@@ -102,5 +102,11 @@ export const api = {
 
   leaveGroup: (groupId: string) =>
     call(`/api/groups/${encodeURIComponent(groupId)}/leave`, { method: "POST" }),
+
+  transferAdmin: (groupId: string, memberClientId: string) =>
+    call(`/api/groups/${encodeURIComponent(groupId)}/transfer-admin`, {
+      method: "POST",
+      body: { memberClientId },
+    }),
 };
 

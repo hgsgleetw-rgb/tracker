@@ -19,6 +19,7 @@ interface MembersProps {
   onApprove: (reqId: string) => void;
   onReject: (reqId: string) => void;
   onLeave: () => void;
+  onTransferAdmin: (id: string) => void;
 }
 
 export default function Members({
@@ -35,6 +36,7 @@ export default function Members({
   onApprove,
   onReject,
   onLeave,
+  onTransferAdmin,
 }: MembersProps) {
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
@@ -78,9 +80,33 @@ export default function Members({
                 <div className="nm">
                   {m.zh}
                   {m.isMe ? " (我)" : ""}
+                  {m.isAdmin && (
+                    <span className="badge badge--brand" style={{ marginLeft: 6 }}>
+                      管理員
+                    </span>
+                  )}
                   <small>
                     付款 {s.count} 次 · 共 NT${fmt(s.paid)}
                   </small>
+                  {isAdmin && m.isUser && !m.isMe && !m.isAdmin && (
+                    <button
+                      onClick={() => onTransferAdmin(m.id)}
+                      style={{
+                        display: "block",
+                        marginTop: 4,
+                        padding: 0,
+                        background: "none",
+                        border: 0,
+                        color: "var(--yr-brand-500)",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        textAlign: "left",
+                      }}
+                    >
+                      設為管理員
+                    </button>
+                  )}
                 </div>
                 <div
                   className={`net ${net > 0 ? "pos" : net < 0 ? "neg" : ""}`}

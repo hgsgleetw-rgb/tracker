@@ -6,6 +6,8 @@ export interface Member {
   zh: string;
   tone: 1 | 2 | 3 | 4 | 5 | 6;
   isMe?: boolean;
+  isUser?: boolean; // occupied by a real LINE account (not just a label)
+  isAdmin?: boolean; // this member is the group's admin
 }
 
 export interface Category {

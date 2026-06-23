@@ -83,7 +83,7 @@ export default function AddExpense({
         </button>
       </div>
 
-      <div className="main">
+      <div className="main" style={{ paddingBottom: 20 }}>
         {/* Amount */}
         <div className="card">
           <div className="card__sub">金額</div>
@@ -186,16 +186,17 @@ export default function AddExpense({
             </button>
           ))}
         </div>
-        <div className="sticky-cta">
-          <button
-            className="btn btn--primary btn--block btn--lg"
-            onClick={submit}
-            disabled={!valid}
-            style={{ opacity: valid ? 1 : 0.5 }}
-          >
-            {editing ? "儲存修改" : `記下 NT$${fmt(amt)}`}
-          </button>
-        </div>
+      </div>
+
+      <div className="sticky-cta">
+        <button
+          className="btn btn--primary btn--block btn--lg"
+          onClick={submit}
+          disabled={!valid}
+          style={{ opacity: valid ? 1 : 0.5 }}
+        >
+          {editing ? "儲存修改" : `記下 NT$${fmt(amt)}`}
+        </button>
       </div>
     </>
   );

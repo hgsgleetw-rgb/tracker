@@ -128,7 +128,8 @@
 /* Subscreen header (back, title, action) */
 .sub-top {
   flex: none;
-  padding: 56px 16px 14px;
+  /* Clear the device notch when present; stay compact otherwise. */
+  padding: max(env(safe-area-inset-top, 0px), 20px) 16px 14px;
   display: grid;
   grid-template-columns: 40px 1fr 40px;
   align-items: center;

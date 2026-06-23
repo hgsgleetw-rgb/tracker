@@ -238,7 +238,8 @@
   flex: none;
   background: linear-gradient(180deg, #1B3A66 0%, #2D5687 60%, #325E94 100%);
   color: #fff;
-  padding: 56px 20px 24px;
+  /* Clear the device notch when present; stay compact otherwise. */
+  padding: max(env(safe-area-inset-top, 0px), 20px) 20px 24px;
   position: relative;
   overflow: hidden;
 }

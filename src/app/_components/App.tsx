@@ -465,6 +465,7 @@ export default function App() {
           groupName={activeGroup?.name ?? ""}
           usePool={activeGroup?.usePool ?? false}
           onTab={(t) => setTab(t as Tab)}
+          onAdd={() => setRoute({ name: "add" })}
           onTopUp={() => setRoute({ name: "topup" })}
           onOpenExpense={(e) => setRoute({ name: "expense", expense: e })}
           openSettlement={() => setTab("settle")}

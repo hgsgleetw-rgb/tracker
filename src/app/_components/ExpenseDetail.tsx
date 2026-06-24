@@ -31,11 +31,13 @@ export default function ExpenseDetail({
     .filter((m): m is Member => !!m);
   const perPerson = splitMembers.length > 0 ? Math.round(expense.amount / splitMembers.length) : 0;
 
-  // Fund expenses: anyone can edit. Personal: only the payer themselves
-  // (or admin if the payer is an unclaimed label).
+  // Edit — fund: anyone (logged); personal: only the payer (or admin for an
+  // unclaimed label).
   const canEdit = expense.fromPool
     ? true
     : !!payer?.isMe || (!payer?.isUser && isAdmin);
+  // Delete is unlogged → only the recorder (payer), or admin for a label.
+  const canDelete = !!payer?.isMe || (!payer?.isUser && isAdmin);
 
   // Drag-to-dismiss: drag the sheet down past a threshold to close it.
   const [drag, setDrag] = useState(0);
@@ -209,14 +211,18 @@ export default function ExpenseDetail({
             </div>
           )}
 
-          {canEdit ? (
+          {canEdit || canDelete ? (
             <div className="btn-row">
-              <button className="btn btn--danger" onClick={onDelete}>
-                <AppIcon name="trash" size={16} /> 刪除
-              </button>
-              <button className="btn btn--primary" onClick={onEdit}>
-                編輯
-              </button>
+              {canDelete && (
+                <button className="btn btn--danger" onClick={onDelete}>
+                  <AppIcon name="trash" size={16} /> 刪除
+                </button>
+              )}
+              {canEdit && (
+                <button className="btn btn--primary" onClick={onEdit}>
+                  編輯
+                </button>
+              )}
             </div>
           ) : (
             <div

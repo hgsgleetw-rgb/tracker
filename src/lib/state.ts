@@ -183,6 +183,34 @@ export async function canEditExpense(
   return "denied";
 }
 
+/**
+ * Whether `userId` may DELETE an expense. Stricter than editing: deletion is
+ * unlogged, so even fund expenses can only be removed by the person who
+ * recorded them (the payer) — or by the admin for unclaimed-label expenses.
+ */
+export async function canDeleteExpense(
+  dbGroupId: string,
+  clientId: string,
+  userId: string
+): Promise<"missing" | "allowed" | "denied"> {
+  const exp = await prisma.expense.findUnique({
+    where: { groupId_clientId: { groupId: dbGroupId, clientId } },
+    select: { payerId: true },
+  });
+  if (!exp) return "missing";
+  const group = await prisma.group.findUnique({
+    where: { id: dbGroupId },
+    select: { userId: true },
+  });
+  const payer = await prisma.member.findUnique({
+    where: { groupId_clientId: { groupId: dbGroupId, clientId: exp.payerId } },
+    select: { userId: true },
+  });
+  if (payer?.userId === userId) return "allowed";
+  if (!payer?.userId && group?.userId === userId) return "allowed";
+  return "denied";
+}
+
 /** Insert or update a single expense (used for both add and edit). */
 export async function upsertExpense(
   dbGroupId: string,

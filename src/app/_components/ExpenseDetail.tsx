@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { Member, Expense, CAT_BY_ID, fmt, dayLabel, timeLabel } from "./data";
 import { Avatar, CategoryIcon } from "./Shared";
 import AppIcon from "./Icons";
@@ -36,11 +37,45 @@ export default function ExpenseDetail({
     ? true
     : !!payer?.isMe || (!payer?.isUser && isAdmin);
 
+  // Drag-to-dismiss: drag the sheet down past a threshold to close it.
+  const [drag, setDrag] = useState(0);
+  const startY = useRef<number | null>(null);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    startY.current = e.clientY;
+    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (startY.current == null) return;
+    setDrag(Math.max(0, e.clientY - startY.current));
+  };
+  const onPointerUp = () => {
+    if (startY.current == null) return;
+    if (drag > 110) onClose();
+    else setDrag(0);
+    startY.current = null;
+  };
+
   return (
     <>
       <div className="sheet-back" onClick={onClose} />
-      <div className="sheet">
-        <div className="sheet__handle" />
+      <div
+        className="sheet"
+        style={{
+          transform: `translate(-50%, ${drag}px)`,
+          transition: startY.current == null ? "transform 200ms var(--yr-ease-standard)" : "none",
+        }}
+      >
+        <div
+          className="sheet-grab"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+          style={{ padding: "4px 0 8px", cursor: "grab", touchAction: "none" }}
+        >
+          <div className="sheet__handle" />
+        </div>
 
         <div
           style={{

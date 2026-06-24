@@ -68,29 +68,24 @@ export default function Dashboard({
     if (v && v !== groupName) onRenameGroup(v);
   };
 
-  // In a fund group, "支出" means money spent from the shared fund; personal
-  // expenses are a separate ledger (淨額 / 結算), so they're excluded here.
-  const isSpend = (e: Expense) => (usePool ? !!e.fromPool : true);
-  const spendLabel = usePool ? "本月基金支出" : "本月支出";
-
-  // This month
+  // This month — total spending (all expenses), separate from the fund.
   const monthStart = new Date();
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
-  const monthExpenses = expenses.filter(
-    (e) => e.at >= monthStart.getTime() && isSpend(e)
-  );
+  const monthExpenses = expenses.filter((e) => e.at >= monthStart.getTime());
   const monthTotal = monthExpenses.reduce((a, e) => a + e.amount, 0);
+  // Of which, how much came from the shared fund (for the hero line).
+  const monthFundSpent = monthExpenses.reduce(
+    (a, e) => a + (e.fromPool ? e.amount : 0),
+    0
+  );
 
-  // Last month comparison (same kind of spending)
+  // Last month comparison (total spending)
   const lastMonthStart = new Date(monthStart);
   lastMonthStart.setMonth(lastMonthStart.getMonth() - 1);
   const lastMonthTotal = expenses
     .filter(
-      (e) =>
-        e.at >= lastMonthStart.getTime() &&
-        e.at < monthStart.getTime() &&
-        isSpend(e)
+      (e) => e.at >= lastMonthStart.getTime() && e.at < monthStart.getTime()
     )
     .reduce((a, e) => a + e.amount, 0);
   const monthDiff =
@@ -114,8 +109,8 @@ export default function Dashboard({
 
   // Progress bar width
   const progressWidth =
-    usePool && pool > 0
-      ? Math.min(100, (monthTotal / (pool + monthTotal)) * 100)
+    usePool && pool + monthFundSpent > 0
+      ? Math.min(100, (monthFundSpent / (pool + monthFundSpent)) * 100)
       : 0;
 
   return (
@@ -223,7 +218,7 @@ export default function Dashboard({
           <div className="hero-progress">
             <div className="hero-prog-row">
               <span>本月用掉基金</span>
-              <span className="v">NT${fmt(monthTotal)}</span>
+              <span className="v">NT${fmt(monthFundSpent)}</span>
             </div>
             <div className="hero-bar">
               <span style={{ width: `${progressWidth}%` }} />
@@ -313,7 +308,7 @@ export default function Dashboard({
                   <div className="kpi-ico">
                     <AppIcon name="wallet" size={14} strokeWidth={2.2} />
                   </div>
-                  <span>{spendLabel}{monthExpenses.length > 0 ? " · 看走勢" : ""}</span>
+                  <span>本月支出{monthExpenses.length > 0 ? " · 看走勢" : ""}</span>
                 </div>
                 <div className="v">NT${fmt(monthTotal)}</div>
                 {lastMonthTotal === 0 ? (

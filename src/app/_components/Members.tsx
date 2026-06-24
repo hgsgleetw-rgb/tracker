@@ -265,6 +265,22 @@ export default function Members({
                 將清除所有支出與儲值資料（無法復原）
               </div>
             </div>
+
+            <div className="sec-title">
+              <h3>群組</h3>
+            </div>
+            <div className="card">
+              <div
+                className="muted"
+                style={{ fontSize: 12, textAlign: "center", lineHeight: 1.6 }}
+              >
+                你是這個群組的管理員，無法直接退出。
+                <br />
+                要離開：先把某位成員「設為管理員」交棒後再退出，
+                <br />
+                或在群組切換頁刪除整個群組。
+              </div>
+            </div>
           </>
         ) : (
           <>

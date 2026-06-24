@@ -42,6 +42,32 @@ type Route =
 
 type LoadPhase = "loading" | "ready" | "error";
 
+// Downscale an image file to a square-ish max edge and return a JPEG data URL.
+function resizeImage(file: File, max = 256): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("no canvas context"));
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("image load failed"));
+    };
+    img.src = url;
+  });
+}
+
 export default function App() {
   const { liff, isReady, error: liffError, profile } = useLiff();
 
@@ -215,6 +241,29 @@ export default function App() {
     setShowSwitcher(false);
     setTab("home");
     setRoute({ name: "tab" });
+  };
+
+  const uploadAvatar = async (file: File) => {
+    try {
+      const dataUrl = await resizeImage(file, 256);
+      await api.uploadAvatar(dataUrl);
+      const s = await api.getState(); // refresh so the new photo shows everywhere
+      setState(s);
+      pushToast({ title: "大頭照已更新" });
+    } catch (e) {
+      console.error("[uploadAvatar]", e);
+      pushToast({ title: "上傳失敗", desc: "請換一張圖片再試" });
+    }
+  };
+
+  const renameGroup = (name: string) => {
+    const gid = state.activeGroupId;
+    if (!gid) return;
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    updateActiveGroup(() => ({ name: trimmed }));
+    sync(api.renameGroup(gid, trimmed));
+    pushToast({ title: "已更名", desc: trimmed });
   };
 
   const deleteGroup = (id: string) => {
@@ -536,6 +585,7 @@ export default function App() {
           settleSuggestions={settleSuggestions}
           groupName={activeGroup?.name ?? ""}
           usePool={activeGroup?.usePool ?? false}
+          isAdmin={activeGroup?.isAdmin ?? false}
           onTab={(t) => setTab(t as Tab)}
           onAdd={() => setRoute({ name: "add" })}
           onTopUp={() => setRoute({ name: "topup" })}
@@ -543,6 +593,7 @@ export default function App() {
           openSettlement={() => setTab("settle")}
           openHistory={() => setTab("history")}
           onSwitchGroup={() => setShowSwitcher(true)}
+          onRenameGroup={renameGroup}
         />
       );
     } else if (tab === "history") {
@@ -584,6 +635,7 @@ export default function App() {
           onReject={rejectRequest}
           onLeave={leaveGroup}
           onTransferAdmin={transferAdmin}
+          onUploadAvatar={uploadAvatar}
         />
       );
     }

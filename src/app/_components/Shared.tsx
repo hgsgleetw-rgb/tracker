@@ -13,6 +13,18 @@ export function Avatar({
 }) {
   if (!member) return null;
   const cls = `avatar ${size === "lg" ? "avatar--lg" : ""} tone-${member.tone}`;
+  if (member.avatarUrl) {
+    return (
+      <div className={cls} style={{ padding: 0, overflow: "hidden" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={member.avatarUrl}
+          alt={member.zh || member.name}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      </div>
+    );
+  }
   const initial =
     member.zh && /[一-龥]/.test(member.zh)
       ? member.zh.slice(0, 1)

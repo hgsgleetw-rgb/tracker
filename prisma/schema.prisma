@@ -16,6 +16,9 @@ model User {
   onboarded     Boolean  @default(false)
   tutorialDone  Boolean  @default(false)
   activeGroupId String? // clientId of the active group
+  avatar        Bytes? // uploaded avatar image (served via /api/avatar/[id])
+  avatarMime    String? // content-type of the uploaded avatar
+  avatarVersion Int      @default(0) // bumped on each upload; 0 = no custom avatar
   createdAt     DateTime @default(now())
   groups        Group[] // groups this user created
   members       Member[] // member slots this user occupies across groups

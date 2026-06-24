@@ -8,6 +8,7 @@ export interface Member {
   isMe?: boolean;
   isUser?: boolean; // occupied by a real LINE account (not just a label)
   isAdmin?: boolean; // this member is the group's admin
+  avatarUrl?: string; // uploaded avatar image URL (if any)
 }
 
 export interface Category {

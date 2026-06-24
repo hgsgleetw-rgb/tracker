@@ -46,14 +46,21 @@ export async function PATCH(
   if (!auth.ok) return auth.response;
   const { id } = await params;
   try {
-    const body = (await request.json()) as { action: string; amount?: number };
+    const body = (await request.json()) as { action: string; amount?: number; name?: string };
     const group = await prisma.group.findUnique({
       where: { userId_clientId: { userId: auth.user.id, clientId: id } },
       select: { id: true },
     });
     if (!group) return NextResponse.json({ error: "Group not found" }, { status: 404 });
 
-    if (body.action === "topup") {
+    if (body.action === "rename") {
+      const name = (body.name ?? "").trim();
+      if (!name) return NextResponse.json({ error: "名稱不可空白" }, { status: 400 });
+      await prisma.group.update({
+        where: { id: group.id },
+        data: { name: name.slice(0, 30) },
+      });
+    } else if (body.action === "topup") {
       await prisma.group.update({
         where: { id: group.id },
         data: { pool: { increment: Math.round(body.amount ?? 0) } },

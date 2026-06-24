@@ -199,7 +199,11 @@ export default function Dashboard({
           </div>
           <div className="hero-bal-amt">
             <span className="cur">NT$</span>
-            {fmt(usePool ? pool : monthTotal)}
+            {(() => {
+              const v = usePool ? pool : monthTotal;
+              // Use a real minus sign (−) tight to the digits, not a hyphen.
+              return v < 0 ? `−${fmt(Math.abs(v))}` : fmt(v);
+            })()}
           </div>
         </div>
 

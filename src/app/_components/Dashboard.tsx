@@ -429,6 +429,7 @@ export default function Dashboard({
                         {e.note || cat?.label || e.category}
                       </div>
                       <div className="lr-meta">
+                        {e.note && <span>{cat?.label} · </span>}
                         {e.fromPool ? (
                           <span>公基金{payer?.zh ? ` · ${payer.zh} 記` : ""}</span>
                         ) : (

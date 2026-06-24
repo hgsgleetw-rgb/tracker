@@ -58,6 +58,7 @@ export default function SettleBreakdown({
                     <div className="lr-title">{e.note || cat?.label || e.category}</div>
                     <div className="lr-meta">
                       <span>
+                        {e.note ? `${cat?.label} · ` : ""}
                         {payer?.zh} 付 · 全額 NT${fmt(e.amount)}
                       </span>
                     </div>

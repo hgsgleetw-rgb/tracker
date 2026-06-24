@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Member, Transfer, Expense, CAT_BY_ID, fmt, fmtSigned } from "./data";
-import { Avatar, CategoryIcon } from "./Shared";
+import { Member, Transfer, Expense, fmt, fmtSigned } from "./data";
+import { Avatar } from "./Shared";
 import AppIcon from "./Icons";
+import SettleBreakdown from "./SettleBreakdown";
 
 interface SettlementProps {
   team: Member[];
@@ -31,23 +32,6 @@ export default function Settlement({
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [detail, setDetail] = useState<Transfer | null>(null);
-
-  // Personal expenses between two people that make up the debt between them.
-  const breakdown = (fromId: string, toId: string) =>
-    expenses
-      .filter(
-        (e) =>
-          !e.fromPool &&
-          e.splitWith.length > 0 &&
-          ((e.payerId === toId && e.splitWith.includes(fromId)) ||
-            (e.payerId === fromId && e.splitWith.includes(toId)))
-      )
-      .map((e) => {
-        const share = Math.round(e.amount / e.splitWith.length);
-        // Positive = fromId owes toId for this item; negative = the reverse.
-        const signed = e.payerId === toId ? share : -share;
-        return { e, signed };
-      });
   const sorted = [...team].sort(
     (a, b) => (balances[b.id] || 0) - (balances[a.id] || 0)
   );
@@ -268,67 +252,14 @@ export default function Settlement({
         </div>
       </div>
 
-      {detail && (() => {
-        const from = team.find((m) => m.id === detail.from);
-        const to = team.find((m) => m.id === detail.to);
-        const items = breakdown(detail.from, detail.to);
-        return (
-          <>
-            <div className="sheet-back" onClick={() => setDetail(null)} />
-            <div className="sheet">
-              <div className="sheet__handle" />
-              <div
-                style={{
-                  font: "700 16px/1.3 var(--yr-font-sans)",
-                  color: "var(--yr-fg)",
-                  textAlign: "center",
-                  marginBottom: 4,
-                }}
-              >
-                {from?.zh} → {to?.zh}：NT${fmt(detail.amount)}
-              </div>
-              <div
-                className="muted"
-                style={{ fontSize: 12, textAlign: "center", marginBottom: 14 }}
-              >
-                這筆款項的來源明細
-              </div>
-              {items.length === 0 ? (
-                <div className="muted" style={{ textAlign: "center", padding: "16px 0" }}>
-                  沒有兩人之間的個人支出明細
-                </div>
-              ) : (
-                <div className="list">
-                  {items.map(({ e, signed }) => {
-                    const cat = CAT_BY_ID[e.category];
-                    const payer = team.find((m) => m.id === e.payerId);
-                    return (
-                      <div className="list-row" key={e.id} style={{ cursor: "default" }}>
-                        <CategoryIcon category={e.category} />
-                        <div className="lr-main">
-                          <div className="lr-title">{e.note || cat?.label || e.category}</div>
-                          <div className="lr-meta">
-                            <span>
-                              {payer?.zh} 付 · 全額 NT${fmt(e.amount)}
-                            </span>
-                          </div>
-                        </div>
-                        <div
-                          className={`net ${signed >= 0 ? "neg" : "pos"}`}
-                          style={{ fontWeight: 700, minWidth: 64, textAlign: "right" }}
-                        >
-                          {signed >= 0 ? "+" : "−"}NT${fmt(Math.abs(signed))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              <div style={{ height: 8 }} />
-            </div>
-          </>
-        );
-      })()}
+      {detail && (
+        <SettleBreakdown
+          transfer={detail}
+          team={team}
+          expenses={expenses}
+          onClose={() => setDetail(null)}
+        />
+      )}
     </>
   );
 }

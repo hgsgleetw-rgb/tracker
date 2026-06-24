@@ -223,6 +223,27 @@ export function computeFundBalance(pool: number, expenses: Expense[]): number {
   return pool - fundSpent(expenses);
 }
 
+// Personal expenses between two people that make up the debt between them.
+// signed > 0 => `fromId` owes `toId` for that item; < 0 => the reverse.
+export function settleBreakdown(
+  expenses: Expense[],
+  fromId: string,
+  toId: string
+): { e: Expense; signed: number }[] {
+  return expenses
+    .filter(
+      (e) =>
+        !e.fromPool &&
+        e.splitWith.length > 0 &&
+        ((e.payerId === toId && e.splitWith.includes(fromId)) ||
+          (e.payerId === fromId && e.splitWith.includes(toId)))
+    )
+    .map((e) => {
+      const share = Math.round(e.amount / e.splitWith.length);
+      return { e, signed: e.payerId === toId ? share : -share };
+    });
+}
+
 export function computeSettlements(
   balances: Record<string, number>
 ): Transfer[] {

@@ -121,7 +121,7 @@ export function BreakdownChart({
     <div className="brk">
       <div className="brk-hd">
         <div>
-          <div className="lbl">本月總支出</div>
+          <div className="lbl">我的本月花費</div>
           <div className="amt">
             <span className="cur">NT$</span>
             {fmt(total)}

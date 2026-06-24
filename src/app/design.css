@@ -366,7 +366,8 @@
   background: var(--yr-gray-50);
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
-  margin-top: 0;
+  /* Overlap up into the hero so the rounded top corners show against blue. */
+  margin-top: -16px;
   padding-top: 18px;
   position: relative;
   z-index: 2;

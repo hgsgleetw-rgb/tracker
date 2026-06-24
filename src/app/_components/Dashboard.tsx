@@ -68,35 +68,44 @@ export default function Dashboard({
     if (v && v !== groupName) onRenameGroup(v);
   };
 
-  // This month — total spending (all expenses), separate from the fund.
+  // "我的支出" = my own share of personal expenses (fund expenses excluded,
+  // since that's communal money — not mine).
+  const myId = me?.id;
+  const myShare = (e: Expense) =>
+    !e.fromPool && myId && e.splitWith.length > 0 && e.splitWith.includes(myId)
+      ? Math.round(e.amount / e.splitWith.length)
+      : 0;
+
+  // This month
   const monthStart = new Date();
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
   const monthExpenses = expenses.filter((e) => e.at >= monthStart.getTime());
-  const monthTotal = monthExpenses.reduce((a, e) => a + e.amount, 0);
-  // Of which, how much came from the shared fund (for the hero line).
+  const monthMineExpenses = monthExpenses.filter((e) => myShare(e) > 0);
+  const monthTotal = monthMineExpenses.reduce((a, e) => a + myShare(e), 0);
+  // How much of the fund was used this month (for the hero line).
   const monthFundSpent = monthExpenses.reduce(
     (a, e) => a + (e.fromPool ? e.amount : 0),
     0
   );
 
-  // Last month comparison (total spending)
+  // Last month comparison (my own share)
   const lastMonthStart = new Date(monthStart);
   lastMonthStart.setMonth(lastMonthStart.getMonth() - 1);
   const lastMonthTotal = expenses
     .filter(
       (e) => e.at >= lastMonthStart.getTime() && e.at < monthStart.getTime()
     )
-    .reduce((a, e) => a + e.amount, 0);
+    .reduce((a, e) => a + myShare(e), 0);
   const monthDiff =
     lastMonthTotal === 0
       ? 0
       : Math.round(((monthTotal - lastMonthTotal) / lastMonthTotal) * 100);
 
-  // Top categories
+  // Top categories (my share)
   const catTotals: Record<string, number> = {};
-  monthExpenses.forEach((e) => {
-    catTotals[e.category] = (catTotals[e.category] || 0) + e.amount;
+  monthMineExpenses.forEach((e) => {
+    catTotals[e.category] = (catTotals[e.category] || 0) + myShare(e);
   });
   const sortedCats = Object.entries(catTotals)
     .sort((a, b) => b[1] - a[1])
@@ -202,7 +211,7 @@ export default function Dashboard({
           style={{ cursor: usePool ? "pointer" : "default" }}
         >
           <div className="hero-bal-lbl">
-            {usePool ? "目前基金" : "本月支出總額"}
+            {usePool ? "目前基金" : "我的本月花費"}
           </div>
           <div className="hero-bal-amt">
             <span className="cur">NT$</span>
@@ -301,14 +310,14 @@ export default function Dashboard({
             <div className="kpis">
               <div
                 className="kpi kpi--spend"
-                onClick={() => monthExpenses.length > 0 && setShowTrend(true)}
-                style={{ cursor: monthExpenses.length > 0 ? "pointer" : "default" }}
+                onClick={() => monthMineExpenses.length > 0 && setShowTrend(true)}
+                style={{ cursor: monthMineExpenses.length > 0 ? "pointer" : "default" }}
               >
                 <div className="l">
                   <div className="kpi-ico">
                     <AppIcon name="wallet" size={14} strokeWidth={2.2} />
                   </div>
-                  <span>本月支出{monthExpenses.length > 0 ? " · 看走勢" : ""}</span>
+                  <span>我的本月花費{monthMineExpenses.length > 0 ? " · 看走勢" : ""}</span>
                 </div>
                 <div className="v">NT${fmt(monthTotal)}</div>
                 {lastMonthTotal === 0 ? (
@@ -340,12 +349,12 @@ export default function Dashboard({
                   </div>
                   <span>本月筆數</span>
                 </div>
-                <div className="v">{monthExpenses.length}</div>
+                <div className="v">{monthMineExpenses.length}</div>
                 <div className="sub">
                   平均 NT$
                   {fmt(
-                    monthExpenses.length
-                      ? monthTotal / monthExpenses.length
+                    monthMineExpenses.length
+                      ? monthTotal / monthMineExpenses.length
                       : 0
                   )}
                   /筆
@@ -479,9 +488,9 @@ export default function Dashboard({
         const today = new Date();
         const days = today.getDate(); // 1..today
         const daily = new Array(days).fill(0);
-        monthExpenses.forEach((e) => {
+        monthMineExpenses.forEach((e) => {
           const d = new Date(e.at).getDate();
-          if (d >= 1 && d <= days) daily[d - 1] += e.amount;
+          if (d >= 1 && d <= days) daily[d - 1] += myShare(e);
         });
         const max = Math.max(...daily, 1);
         const peak = Math.max(...daily, 0);
@@ -497,13 +506,13 @@ export default function Dashboard({
                   textAlign: "center",
                 }}
               >
-                本月花費走勢
+                我的花費走勢
               </div>
               <div
                 className="muted"
                 style={{ fontSize: 12, textAlign: "center", marginBottom: 16 }}
               >
-                共 NT${fmt(monthTotal)} · {monthExpenses.length} 筆 · 單日最高 NT${fmt(peak)}
+                共 NT${fmt(monthTotal)} · {monthMineExpenses.length} 筆 · 單日最高 NT${fmt(peak)}
               </div>
               <div
                 style={{

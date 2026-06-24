@@ -56,6 +56,7 @@ function toClientGroup(g: GroupWithRelations, viewerUserId: string): Group {
       fromPool: e.fromPool,
       editedAt: e.editedAt ? e.editedAt.getTime() : undefined,
       editedByName: e.editedByName ?? undefined,
+      prevAmount: e.prevAmount ?? undefined,
     })),
     // Only the admin needs to see (and act on) pending requests.
     pendingRequests: isAdmin
@@ -220,7 +221,7 @@ export async function upsertExpense(
   await prisma.$transaction(async (tx) => {
     const existing = await tx.expense.findUnique({
       where: { groupId_clientId: { groupId: dbGroupId, clientId: e.id } },
-      select: { id: true },
+      select: { id: true, amount: true },
     });
     if (existing) {
       await tx.expenseSplit.deleteMany({ where: { expenseId: existing.id } });
@@ -235,6 +236,7 @@ export async function upsertExpense(
           // Record every edit (audit trail) — shown as 已編輯 in the UI.
           editedAt: new Date(),
           editedByName: editorName,
+          prevAmount: existing.amount, // keep the amount before this edit
           at: new Date(e.at),
           splits: { create: e.splitWith.map((memberId) => ({ memberId })) },
         },

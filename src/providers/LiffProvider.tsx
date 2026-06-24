@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import type Liff from "@line/liff";
-import { setAuthToken } from "@/lib/api";
+import { setTokenGetter } from "@/lib/api";
 
 type LiffProfile = {
   userId: string;
@@ -40,8 +40,8 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
         // Resolves only when logged in (otherwise it redirects to LINE login).
         const p = await getLiffProfile();
 
-        // Attach the access token used to authenticate every API call.
-        setAuthToken(liffObj.getAccessToken());
+        // Use the latest token on each request (handles idle/expiry refresh).
+        setTokenGetter(() => liffObj.getAccessToken());
 
         setProfile({
           userId: p.userId,

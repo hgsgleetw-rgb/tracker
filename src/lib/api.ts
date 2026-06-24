@@ -1,21 +1,29 @@
 // Client-side API helper. All calls carry the LINE access token for auth.
 import type { AppState, Group, Expense, Member } from "@/app/_components/data";
 
-let authToken: string | null = null;
+// Resolve the auth token freshly on every call so an expired/refreshed LINE
+// token (e.g. after the app sits idle) is always picked up.
+let tokenGetter: (() => string | null) | null = null;
 
+export function setTokenGetter(fn: () => string | null) {
+  tokenGetter = fn;
+}
+
+// Back-compat: a static token still works.
 export function setAuthToken(token: string | null) {
-  authToken = token;
+  tokenGetter = () => token;
 }
 
 async function call<T = unknown>(
   path: string,
   options: { method?: string; body?: unknown } = {}
 ): Promise<T> {
+  const token = tokenGetter ? tokenGetter() : null;
   const res = await fetch(path, {
     method: options.method ?? "GET",
     headers: {
       "Content-Type": "application/json",
-      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
   });

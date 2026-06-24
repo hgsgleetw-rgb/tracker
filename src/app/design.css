@@ -256,6 +256,28 @@
   display: flex; align-items: center; justify-content: space-between;
   position: relative; z-index: 1;
 }
+.hero-toggle {
+  display: inline-flex;
+  gap: 2px;
+  margin-top: 16px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.14);
+  position: relative; z-index: 1;
+}
+.hero-tg {
+  border: 0;
+  background: none;
+  color: rgba(255,255,255,0.75);
+  font: 600 12px/1 var(--yr-font-sans);
+  padding: 7px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.hero-tg.on {
+  background: #fff;
+  color: var(--yr-brand-600);
+}
 .hero-top-left { display: flex; align-items: center; gap: 12px; }
 .hero-avatar .avatar { border: 2px solid rgba(255,255,255,0.18); }
 .hero-greet {

@@ -60,6 +60,17 @@ export default function Dashboard({
   const [nameDraft, setNameDraft] = useState(groupName);
   const [settleDetail, setSettleDetail] = useState<Transfer | null>(null);
   const [showTrend, setShowTrend] = useState(false);
+  const [heroView, setHeroView] = useState<"fund" | "mine">("fund");
+
+  // Personal-balance wording (no +/− that looks like profit/loss).
+  const netLabel =
+    myNet > 0 ? "別人欠你" : myNet < 0 ? "你欠別人" : "目前互不相欠";
+  const netText =
+    myNet === 0
+      ? "目前互不相欠"
+      : myNet > 0
+        ? `別人欠你 NT$${fmt(myNet)}`
+        : `你欠別人 NT$${fmt(-myNet)}`;
 
   const commitName = () => {
     setEditingName(false);
@@ -204,57 +215,82 @@ export default function Dashboard({
           </button>
         </div>
 
-        <div
-          className="hero-balance"
-          onClick={usePool ? onTopUp : undefined}
-          style={{ cursor: usePool ? "pointer" : "default" }}
-        >
-          <div className="hero-bal-lbl">
-            {usePool ? "目前基金" : "我的本月花費"}
+        {usePool && (
+          <div className="hero-toggle">
+            <button
+              className={`hero-tg ${heroView === "fund" ? "on" : ""}`}
+              onClick={() => setHeroView("fund")}
+            >
+              公基金
+            </button>
+            <button
+              className={`hero-tg ${heroView === "mine" ? "on" : ""}`}
+              onClick={() => setHeroView("mine")}
+            >
+              我的
+            </button>
           </div>
-          <div className="hero-bal-amt">
-            <span className="cur">NT$</span>
-            {(() => {
-              const v = usePool ? pool : monthTotal;
-              // Use a real minus sign (−) tight to the digits, not a hyphen.
-              return v < 0 ? `−${fmt(Math.abs(v))}` : fmt(v);
-            })()}
-          </div>
-        </div>
+        )}
 
-        {usePool ? (
-          <div className="hero-progress">
-            <div className="hero-prog-row">
-              <span>本月用掉基金</span>
-              <span className="v">NT${fmt(monthFundSpent)}</span>
+        {usePool && heroView === "fund" ? (
+          <>
+            <div
+              className="hero-balance"
+              onClick={onTopUp}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="hero-bal-lbl">目前基金</div>
+              <div className="hero-bal-amt">
+                <span className="cur">NT$</span>
+                {pool < 0 ? `−${fmt(Math.abs(pool))}` : fmt(pool)}
+              </div>
             </div>
-            <div className="hero-bar">
-              <span style={{ width: `${progressWidth}%` }} />
+            <div className="hero-progress">
+              <div className="hero-prog-row">
+                <span>本月用掉基金</span>
+                <span className="v">NT${fmt(monthFundSpent)}</span>
+              </div>
+              <div className="hero-bar">
+                <span style={{ width: `${progressWidth}%` }} />
+              </div>
+              <div className="hero-prog-row sub">
+                <span>{netText}</span>
+                <span>待結算 {needSettle} 筆</span>
+              </div>
             </div>
-            <div className="hero-prog-row sub">
-              <span>
-                {myNet === 0
-                  ? "目前互不相欠"
-                  : myNet > 0
-                    ? `別人欠你 NT$${fmt(myNet)}`
-                    : `你欠別人 NT$${fmt(-myNet)}`}
-              </span>
-              <span>待結算 {needSettle} 筆</span>
-            </div>
-          </div>
+          </>
         ) : (
-          <div className="hero-progress">
-            <div className="hero-prog-row sub" style={{ marginTop: 0 }}>
-              <span>
-                {myNet === 0
-                  ? "目前互不相欠"
-                  : myNet > 0
-                    ? `別人欠你 NT$${fmt(myNet)}`
-                    : `你欠別人 NT$${fmt(-myNet)}`}
-              </span>
-              <span>待結算 {needSettle} 筆</span>
+          <>
+            <div
+              className="hero-balance"
+              onClick={openSettlement}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="hero-bal-lbl">{netLabel}</div>
+              <div className="hero-bal-amt">
+                {myNet === 0 ? (
+                  "—"
+                ) : (
+                  <>
+                    <span className="cur">NT$</span>
+                    {fmt(Math.abs(myNet))}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+            <div className="hero-progress">
+              <div className="hero-prog-row">
+                <span>我的本月花費</span>
+                <span className="v">NT${fmt(monthTotal)}</span>
+              </div>
+              <div className="hero-prog-row sub" style={{ marginTop: 8 }}>
+                <span>
+                  {needSettle > 0 ? `${needSettle} 筆待結算` : "目前無待結算"}
+                </span>
+                <span />
+              </div>
+            </div>
+          </>
         )}
 
         <div className="hero-quick">

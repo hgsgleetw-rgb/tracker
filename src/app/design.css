@@ -192,7 +192,7 @@
   padding: 6px 4px;
   background: none; border: 0;
   cursor: pointer;
-  color: var(--yr-fg-subtle);
+  color: var(--yr-gray-400); /* paler when not selected */
   border-radius: 10px;
 }
 .tab span {
@@ -200,7 +200,8 @@
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
-.tab.tab--active { color: var(--yr-brand-500); }
+.tab.tab--active { color: var(--yr-brand-600); } /* stronger when selected */
+.tab.tab--active span { font-weight: 700; }
 .tab.tab--fab {
   position: relative;
   margin-top: -22px;

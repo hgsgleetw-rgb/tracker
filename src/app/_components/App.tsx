@@ -489,6 +489,28 @@ export default function App() {
     pushToast({ title: "已退出群組" });
   };
 
+  // Admin leaving: hand admin to another member, then leave.
+  const handoverAndLeave = async (memberId: string) => {
+    const gid = state.activeGroupId;
+    if (!gid) return;
+    const m = team.find((x) => x.id === memberId);
+    if (
+      !(await confirmAsync(
+        `把管理員交給「${m?.zh ?? ""}」並退出群組？\n你的名字與紀錄會保留給其他成員。`
+      ))
+    )
+      return;
+    setState((s) => {
+      const next = s.groups.filter((g) => g.id !== gid);
+      return { ...s, groups: next, activeGroupId: next[0]?.id ?? null };
+    });
+    sync(api.transferAdmin(gid, memberId).then(() => api.leaveGroup(gid)));
+    setShowSwitcher(false);
+    setTab("home");
+    setRoute({ name: "tab" });
+    pushToast({ title: "已交棒並退出", desc: m?.zh });
+  };
+
   // ── Loading / error gates ───────────────────────────────────
   if (!isReady || phase === "loading") {
     return (
@@ -664,6 +686,7 @@ export default function App() {
           onApprove={approveRequest}
           onReject={rejectRequest}
           onLeave={leaveGroup}
+          onHandoverLeave={handoverAndLeave}
           onTransferAdmin={transferAdmin}
           onUploadAvatar={uploadAvatar}
         />

@@ -19,6 +19,7 @@ interface MembersProps {
   onApprove: (reqId: string) => void;
   onReject: (reqId: string) => void;
   onLeave: () => void;
+  onHandoverLeave: (memberId: string) => void;
   onTransferAdmin: (id: string) => void;
   onUploadAvatar: (file: File) => void;
 }
@@ -37,11 +38,16 @@ export default function Members({
   onApprove,
   onReject,
   onLeave,
+  onHandoverLeave,
   onTransferAdmin,
   onUploadAvatar,
 }: MembersProps) {
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
+  const [showHandover, setShowHandover] = useState(false);
+  const [showLeaveInfo, setShowLeaveInfo] = useState(false);
+  // Members (real accounts, not me) who could take over as admin.
+  const successors = team.filter((m) => m.isUser && !m.isMe && !m.isAdmin);
 
   const stats = (mid: string) => {
     let paid = 0, owed = 0, count = 0;
@@ -266,20 +272,37 @@ export default function Members({
               </div>
             </div>
 
-            <div className="sec-title">
+            <div className="sec-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <h3>群組</h3>
+              <button
+                onClick={() => setShowLeaveInfo((s) => !s)}
+                aria-label="說明"
+                style={{
+                  width: 18, height: 18, borderRadius: "50%",
+                  border: "1px solid var(--yr-border-strong)",
+                  background: "none", color: "var(--yr-fg-subtle)",
+                  fontSize: 11, lineHeight: 1, cursor: "pointer",
+                }}
+              >
+                i
+              </button>
             </div>
             <div className="card">
-              <div
-                className="muted"
-                style={{ fontSize: 12, textAlign: "center", lineHeight: 1.6 }}
+              <button
+                className="btn btn--danger btn--block"
+                onClick={() => setShowHandover(true)}
               >
-                你是這個群組的管理員，無法直接退出。
-                <br />
-                要離開：先把某位成員「設為管理員」交棒後再退出，
-                <br />
-                或在群組切換頁刪除整個群組。
-              </div>
+                <AppIcon name="back" size={16} /> 退出群組
+              </button>
+              {showLeaveInfo && (
+                <div
+                  className="muted"
+                  style={{ fontSize: 11, marginTop: 8, textAlign: "center", lineHeight: 1.6 }}
+                >
+                  你是管理員，退出前需先把管理員交給其他成員（會自動帶你選），
+                  或在群組切換頁刪除整個群組。
+                </div>
+              )}
             </div>
           </>
         ) : (
@@ -312,6 +335,65 @@ export default function Members({
           記帳 · 員榮設計系統 · v1.0
         </div>
       </div>
+
+      {showHandover && (
+        <>
+          <div className="sheet-back" onClick={() => setShowHandover(false)} />
+          <div className="sheet">
+            <div className="sheet__handle" />
+            <div
+              style={{
+                font: "700 16px/1.3 var(--yr-font-sans)",
+                color: "var(--yr-fg)",
+                textAlign: "center",
+                marginBottom: 4,
+              }}
+            >
+              退出前先交棒
+            </div>
+            <div
+              className="muted"
+              style={{ fontSize: 12, textAlign: "center", marginBottom: 14 }}
+            >
+              你是管理員，選一位成員接手管理員後就會帶你退出。
+            </div>
+            {successors.length === 0 ? (
+              <div
+                className="muted"
+                style={{ textAlign: "center", padding: "12px 0", lineHeight: 1.6 }}
+              >
+                目前沒有其他可接手的成員。
+                <br />
+                請改用「群組切換頁 → 刪除整個群組」。
+              </div>
+            ) : (
+              <div className="list">
+                {successors.map((m) => (
+                  <button
+                    key={m.id}
+                    className="list-row"
+                    onClick={() => {
+                      setShowHandover(false);
+                      onHandoverLeave(m.id);
+                    }}
+                    style={{ width: "100%", border: 0, background: "none", cursor: "pointer" }}
+                  >
+                    <Avatar member={m} size="lg" />
+                    <div className="lr-main">
+                      <div className="lr-title">交給 {m.zh}</div>
+                      <div className="lr-meta">
+                        <span>由 {m.zh} 接手管理員，你退出</span>
+                      </div>
+                    </div>
+                    <AppIcon name="arrow-right" size={18} color="var(--yr-fg-subtle)" />
+                  </button>
+                ))}
+              </div>
+            )}
+            <div style={{ height: 8 }} />
+          </div>
+        </>
+      )}
     </>
   );
 }

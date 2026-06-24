@@ -601,6 +601,7 @@ export default function App() {
           openHistory={() => setTab("history")}
           onSwitchGroup={() => setShowSwitcher(true)}
           onRenameGroup={renameGroup}
+          onUploadAvatar={uploadAvatar}
         />
       );
     } else if (tab === "history") {

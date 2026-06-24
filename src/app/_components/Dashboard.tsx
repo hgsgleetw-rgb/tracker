@@ -32,6 +32,7 @@ interface DashboardProps {
   openHistory: () => void;
   onSwitchGroup: () => void;
   onRenameGroup: (name: string) => void;
+  onUploadAvatar: (file: File) => void;
 }
 
 export default function Dashboard({
@@ -51,6 +52,7 @@ export default function Dashboard({
   openHistory,
   onSwitchGroup,
   onRenameGroup,
+  onUploadAvatar,
 }: DashboardProps) {
   const me = team.find((m) => m.isMe);
   const myNet = me ? balances[me.id] || 0 : 0;
@@ -110,9 +112,23 @@ export default function Dashboard({
       <div className="hero-zone">
         <div className="hero-top">
           <div className="hero-top-left">
-            <div className="hero-avatar">
+            <label
+              className="hero-avatar"
+              style={{ cursor: "pointer" }}
+              title="更換大頭照"
+            >
               <Avatar member={me} size="lg" />
-            </div>
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) onUploadAvatar(f);
+                  e.target.value = "";
+                }}
+              />
+            </label>
             <div>
               {editingName ? (
                 <input
@@ -138,12 +154,12 @@ export default function Dashboard({
               ) : (
                 <div
                   className="hero-greet"
-                  onDoubleClick={() => {
+                  onClick={() => {
                     if (!isAdmin) return;
                     setNameDraft(groupName);
                     setEditingName(true);
                   }}
-                  title={isAdmin ? "點兩下改名" : undefined}
+                  title={isAdmin ? "點一下改名" : undefined}
                   style={{ cursor: isAdmin ? "text" : "default" }}
                 >
                   {groupName || "我的群組"}

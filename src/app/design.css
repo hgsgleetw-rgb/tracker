@@ -239,7 +239,7 @@
   background: linear-gradient(180deg, #1B3A66 0%, #2D5687 60%, #325E94 100%);
   color: #fff;
   /* Clear the device notch when present; stay compact otherwise. */
-  padding: max(env(safe-area-inset-top, 0px), 20px) 20px 24px;
+  padding: max(env(safe-area-inset-top, 0px), 12px) 20px 24px;
   position: relative;
   overflow: hidden;
 }
@@ -366,7 +366,7 @@
   background: var(--yr-gray-50);
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
-  margin-top: -16px;
+  margin-top: 0;
   padding-top: 18px;
   position: relative;
   z-index: 2;

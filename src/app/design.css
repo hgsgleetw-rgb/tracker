@@ -164,7 +164,7 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 16px 16px 110px;
+  padding: 16px 16px calc(110px + env(safe-area-inset-bottom, 0px));
   background: var(--yr-gray-50);
 }
 .main.no-pad { padding: 0 0 100px; }
@@ -176,8 +176,8 @@
   width: 100%;
   max-width: 430px;
   transform: translateX(-50%);
-  height: 84px;
-  padding: 8px 8px 28px;
+  height: calc(84px + env(safe-area-inset-bottom, 0px));
+  padding: 8px 8px calc(28px + env(safe-area-inset-bottom, 0px));
   background: rgba(255,255,255,0.94);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -668,7 +668,7 @@
 .sticky-cta {
   position: sticky;
   bottom: 0; left: 0; right: 0;
-  padding: 14px 16px 30px;
+  padding: 14px 16px calc(18px + env(safe-area-inset-bottom, 0px));
   background: rgba(255,255,255,0.94);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);

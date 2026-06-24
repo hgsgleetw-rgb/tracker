@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import "./design.css";
@@ -13,6 +13,19 @@ const geistSans = Geist({
 export const metadata: Metadata = {
   title: "記帳",
   description: "LINE 記帳 App",
+  appleWebApp: {
+    capable: true,
+    title: "記帳",
+    statusBarStyle: "black-translucent",
+  },
+};
+
+// viewport-fit=cover lets content draw under the notch so the translucent
+// status bar works; the headers pad with env(safe-area-inset-top).
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

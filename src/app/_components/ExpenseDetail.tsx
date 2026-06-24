@@ -79,17 +79,32 @@ export default function ExpenseDetail({
 
         <div style={{ padding: "14px 4px 4px" }}>
           {expense.fromPool ? (
-            <div className="row-flex" style={{ marginBottom: 14 }}>
-              <span className="muted" style={{ fontSize: 12 }}>
-                付款來源
-              </span>
-              <span
-                className="badge badge--brand"
-                style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
-              >
-                <AppIcon name="wallet" size={14} /> 公基金支付
-              </span>
-            </div>
+            <>
+              <div className="row-flex" style={{ marginBottom: 14 }}>
+                <span className="muted" style={{ fontSize: 12 }}>
+                  付款來源
+                </span>
+                <span
+                  className="badge badge--brand"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
+                >
+                  <AppIcon name="wallet" size={14} /> 公基金支付
+                </span>
+              </div>
+              {payer && (
+                <div className="row-flex" style={{ marginBottom: 14 }}>
+                  <span className="muted" style={{ fontSize: 12 }}>
+                    記錄者
+                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <Avatar member={payer} />
+                    <span style={{ font: "600 14px/1 var(--yr-font-sans)" }}>
+                      {payer.zh}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <>
               <div className="row-flex" style={{ marginBottom: 14 }}>

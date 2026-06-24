@@ -173,7 +173,7 @@ export default function History({
                         </div>
                         <div className="lr-meta">
                           {e.fromPool ? (
-                            <span>公基金支付</span>
+                            <span>公基金{payer?.zh ? ` · ${payer.zh} 記` : ""}</span>
                           ) : (
                             <>
                               <span>{payer?.zh} 付</span>

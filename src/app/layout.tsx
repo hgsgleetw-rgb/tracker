@@ -26,6 +26,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // Match the hero's top colour so the status-bar / notch area blends in.
+  themeColor: "#1B3A66",
 };
 
 export default function RootLayout({

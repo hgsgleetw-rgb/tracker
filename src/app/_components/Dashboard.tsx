@@ -12,6 +12,7 @@ import {
 } from "./data";
 import { Avatar, AvatarStack, CategoryIcon, BreakdownChart } from "./Shared";
 import AppIcon from "./Icons";
+import SettleBreakdown from "./SettleBreakdown";
 
 const CAT_COLORS = ["#3E76B9", "#FB6514", "#12B76A", "#7CB9EC", "#717BBC"];
 
@@ -58,6 +59,7 @@ export default function Dashboard({
   const myNet = me ? balances[me.id] || 0 : 0;
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(groupName);
+  const [settleDetail, setSettleDetail] = useState<Transfer | null>(null);
 
   const commitName = () => {
     setEditingName(false);
@@ -357,19 +359,32 @@ export default function Dashboard({
                     const to = team.find((m) => m.id === t.to);
                     if (!from || !to) return null;
                     return (
-                      <div className="settle" key={i}>
+                      <button
+                        className="settle"
+                        key={i}
+                        onClick={() => setSettleDetail(t)}
+                        style={{
+                          width: "100%",
+                          background: "none",
+                          border: 0,
+                          cursor: "pointer",
+                        }}
+                      >
                         <div className="who">
                           <Avatar member={from} />
                           <div className="nm">{from.zh}</div>
                         </div>
                         <div className="arrow">
                           <div className="amt">NT${fmt(t.amount)}</div>
+                          <div className="muted" style={{ fontSize: 10, marginTop: 2 }}>
+                            看明細
+                          </div>
                         </div>
                         <div className="who">
                           <Avatar member={to} />
                           <div className="nm">{to.zh}</div>
                         </div>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -440,6 +455,15 @@ export default function Dashboard({
           </>
         )}
       </div>
+
+      {settleDetail && (
+        <SettleBreakdown
+          transfer={settleDetail}
+          team={team}
+          expenses={expenses}
+          onClose={() => setSettleDetail(null)}
+        />
+      )}
     </>
   );
 }

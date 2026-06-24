@@ -640,6 +640,7 @@ export default function App() {
           team={team}
           balances={balances}
           settleSuggestions={settleSuggestions}
+          expenses={expenses}
           isAdmin={activeGroup?.isAdmin ?? false}
           onBack={() => setTab("home")}
           onMarkPaid={markAllPaid}

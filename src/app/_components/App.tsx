@@ -11,6 +11,7 @@ import {
   buildEmptyGroup,
   computeBalances,
   computeSettlements,
+  computeFundBalance,
   CAT_BY_ID,
   fmt,
   makeId,
@@ -164,6 +165,11 @@ export default function App() {
   const team: Member[] = activeGroup?.team ?? [];
   const expenses: Expense[] = activeGroup?.expenses ?? [];
   const pool: number = activeGroup?.pool ?? 0;
+  // Spendable fund = topped-up total minus what's been spent from the fund.
+  const fundBalance = useMemo(
+    () => computeFundBalance(pool, expenses),
+    [pool, expenses]
+  );
 
   const balances = useMemo(
     () => computeBalances(team, expenses),
@@ -561,6 +567,7 @@ export default function App() {
       <AddExpense
         team={team}
         editing={route.name === "edit" ? route.editing : null}
+        usePool={activeGroup?.usePool ?? false}
         onCancel={() => setRoute({ name: "tab" })}
         onSave={addExpense}
       />
@@ -569,7 +576,7 @@ export default function App() {
     screen = (
       <TopUp
         team={team}
-        pool={pool}
+        pool={fundBalance}
         onBack={() => setRoute({ name: "tab" })}
         onTopUp={topUp}
       />
@@ -580,7 +587,7 @@ export default function App() {
         <Dashboard
           team={team}
           expenses={expenses}
-          pool={pool}
+          pool={fundBalance}
           balances={balances}
           settleSuggestions={settleSuggestions}
           groupName={activeGroup?.name ?? ""}

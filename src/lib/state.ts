@@ -53,6 +53,7 @@ function toClientGroup(g: GroupWithRelations, viewerUserId: string): Group {
       payerId: e.payerId,
       amount: e.amount,
       splitWith: e.splits.map((s) => s.memberId),
+      fromPool: e.fromPool,
     })),
     // Only the admin needs to see (and act on) pending requests.
     pendingRequests: isAdmin
@@ -139,6 +140,7 @@ export async function persistGroup(
           note: e.note ?? "",
           amount: e.amount,
           payerId: e.payerId,
+          fromPool: !!e.fromPool,
           at: new Date(e.at),
           splits: { create: e.splitWith.map((memberId) => ({ memberId })) },
         })),
@@ -163,6 +165,7 @@ export async function upsertExpense(dbGroupId: string, e: Expense): Promise<void
           note: e.note ?? "",
           amount: e.amount,
           payerId: e.payerId,
+          fromPool: !!e.fromPool,
           at: new Date(e.at),
           splits: { create: e.splitWith.map((memberId) => ({ memberId })) },
         },
@@ -176,6 +179,7 @@ export async function upsertExpense(dbGroupId: string, e: Expense): Promise<void
           note: e.note ?? "",
           amount: e.amount,
           payerId: e.payerId,
+          fromPool: !!e.fromPool,
           at: new Date(e.at),
           splits: { create: e.splitWith.map((memberId) => ({ memberId })) },
         },

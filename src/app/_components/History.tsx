@@ -180,6 +180,11 @@ export default function History({
                               <AvatarStack members={splitMembers} max={4} />
                             </>
                           )}
+                          {e.editedAt && (
+                            <span style={{ marginLeft: 6, color: "var(--yr-fg-subtle)" }}>
+                              · 已編輯
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="lr-amt">

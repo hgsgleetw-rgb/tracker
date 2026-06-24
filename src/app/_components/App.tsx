@@ -461,7 +461,13 @@ export default function App() {
   const leaveGroup = () => {
     const gid = state.activeGroupId;
     if (!gid) return;
-    if (!confirm("確定要退出這個群組？")) return;
+    const gname = activeGroup?.name ?? "這個群組";
+    if (
+      !confirm(
+        `確定要退出「${gname}」？\n你的名字與紀錄會保留給其他成員，但你將無法再看到這個群組。`
+      )
+    )
+      return;
     setState((s) => {
       const next = s.groups.filter((g) => g.id !== gid);
       return { ...s, groups: next, activeGroupId: next[0]?.id ?? null };

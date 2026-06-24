@@ -68,20 +68,29 @@ export default function Dashboard({
     if (v && v !== groupName) onRenameGroup(v);
   };
 
+  // In a fund group, "支出" means money spent from the shared fund; personal
+  // expenses are a separate ledger (淨額 / 結算), so they're excluded here.
+  const isSpend = (e: Expense) => (usePool ? !!e.fromPool : true);
+  const spendLabel = usePool ? "本月基金支出" : "本月支出";
+
   // This month
   const monthStart = new Date();
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
-  const monthExpenses = expenses.filter((e) => e.at >= monthStart.getTime());
+  const monthExpenses = expenses.filter(
+    (e) => e.at >= monthStart.getTime() && isSpend(e)
+  );
   const monthTotal = monthExpenses.reduce((a, e) => a + e.amount, 0);
 
-  // Last month comparison
+  // Last month comparison (same kind of spending)
   const lastMonthStart = new Date(monthStart);
   lastMonthStart.setMonth(lastMonthStart.getMonth() - 1);
   const lastMonthTotal = expenses
     .filter(
       (e) =>
-        e.at >= lastMonthStart.getTime() && e.at < monthStart.getTime()
+        e.at >= lastMonthStart.getTime() &&
+        e.at < monthStart.getTime() &&
+        isSpend(e)
     )
     .reduce((a, e) => a + e.amount, 0);
   const monthDiff =
@@ -213,7 +222,7 @@ export default function Dashboard({
         {usePool ? (
           <div className="hero-progress">
             <div className="hero-prog-row">
-              <span>本月已支出</span>
+              <span>本月用掉基金</span>
               <span className="v">NT${fmt(monthTotal)}</span>
             </div>
             <div className="hero-bar">
@@ -304,7 +313,7 @@ export default function Dashboard({
                   <div className="kpi-ico">
                     <AppIcon name="wallet" size={14} strokeWidth={2.2} />
                   </div>
-                  <span>本月支出{monthExpenses.length > 0 ? " · 看走勢" : ""}</span>
+                  <span>{spendLabel}{monthExpenses.length > 0 ? " · 看走勢" : ""}</span>
                 </div>
                 <div className="v">NT${fmt(monthTotal)}</div>
                 {lastMonthTotal === 0 ? (

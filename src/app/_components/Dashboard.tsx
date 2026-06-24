@@ -410,8 +410,14 @@ export default function Dashboard({
                         {e.note || cat?.label || e.category}
                       </div>
                       <div className="lr-meta">
-                        <span>{payer?.zh} 付</span>
-                        <AvatarStack members={splitMembers} max={4} />
+                        {e.fromPool ? (
+                          <span>公基金{payer?.zh ? ` · ${payer.zh} 記` : ""}</span>
+                        ) : (
+                          <>
+                            <span>{payer?.zh} 付</span>
+                            <AvatarStack members={splitMembers} max={4} />
+                          </>
+                        )}
                       </div>
                     </div>
                     <div className="lr-amt">

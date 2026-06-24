@@ -7,7 +7,6 @@ import {
   Transfer,
   CAT_BY_ID,
   fmt,
-  fmtSigned,
   dayLabel,
 } from "./data";
 import { Avatar, AvatarStack, CategoryIcon, BreakdownChart } from "./Shared";
@@ -234,8 +233,11 @@ export default function Dashboard({
             </div>
             <div className="hero-prog-row sub">
               <span>
-                我的淨額{" "}
-                {myNet === 0 ? "—" : fmtSigned(myNet)}
+                {myNet === 0
+                  ? "目前互不相欠"
+                  : myNet > 0
+                    ? `別人欠你 NT$${fmt(myNet)}`
+                    : `你欠別人 NT$${fmt(-myNet)}`}
               </span>
               <span>待結算 {needSettle} 筆</span>
             </div>
@@ -244,8 +246,11 @@ export default function Dashboard({
           <div className="hero-progress">
             <div className="hero-prog-row sub" style={{ marginTop: 0 }}>
               <span>
-                我的淨額{" "}
-                {myNet === 0 ? "—" : fmtSigned(myNet)}
+                {myNet === 0
+                  ? "目前互不相欠"
+                  : myNet > 0
+                    ? `別人欠你 NT$${fmt(myNet)}`
+                    : `你欠別人 NT$${fmt(-myNet)}`}
               </span>
               <span>待結算 {needSettle} 筆</span>
             </div>

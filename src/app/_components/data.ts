@@ -8,6 +8,7 @@ export interface Member {
   isMe?: boolean;
   isUser?: boolean; // occupied by a real LINE account (not just a label)
   isAdmin?: boolean; // this member is the group's admin
+  avatarUrl?: string; // uploaded avatar image URL (if any)
 }
 
 export interface Category {
@@ -25,6 +26,7 @@ export interface Expense {
   payerId: string;
   amount: number;
   splitWith: string[];
+  fromPool?: boolean; // paid from the shared fund (no personal debt)
 }
 
 export interface Transfer {
@@ -195,6 +197,8 @@ export function computeBalances(
     team.map((m) => [m.id, 0])
   );
   expenses.forEach((e) => {
+    // Fund expenses are everyone's money — they create no personal debt.
+    if (e.fromPool) return;
     if (!(e.payerId in map)) map[e.payerId] = 0;
     map[e.payerId] = (map[e.payerId] || 0) + e.amount;
     const share = e.amount / e.splitWith.length;
@@ -205,6 +209,15 @@ export function computeBalances(
   });
   Object.keys(map).forEach((k) => { map[k] = Math.round(map[k]); });
   return map;
+}
+
+// Available fund = total topped up minus what's been spent from the fund.
+export function fundSpent(expenses: Expense[]): number {
+  return expenses.reduce((a, e) => a + (e.fromPool ? e.amount : 0), 0);
+}
+
+export function computeFundBalance(pool: number, expenses: Expense[]): number {
+  return pool - fundSpent(expenses);
 }
 
 export function computeSettlements(

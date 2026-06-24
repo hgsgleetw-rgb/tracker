@@ -78,54 +78,68 @@ export default function ExpenseDetail({
         </div>
 
         <div style={{ padding: "14px 4px 4px" }}>
-          <div className="row-flex" style={{ marginBottom: 14 }}>
-            <span className="muted" style={{ fontSize: 12 }}>
-              付款人
-            </span>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Avatar member={payer} />
+          {expense.fromPool ? (
+            <div className="row-flex" style={{ marginBottom: 14 }}>
+              <span className="muted" style={{ fontSize: 12 }}>
+                付款來源
+              </span>
               <span
-                style={{ font: "600 14px/1 var(--yr-font-sans)" }}
+                className="badge badge--brand"
+                style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
               >
-                {payer?.zh}
+                <AppIcon name="wallet" size={14} /> 公基金支付
               </span>
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="row-flex" style={{ marginBottom: 14 }}>
+                <span className="muted" style={{ fontSize: 12 }}>
+                  付款人
+                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <Avatar member={payer} />
+                  <span style={{ font: "600 14px/1 var(--yr-font-sans)" }}>
+                    {payer?.zh}
+                  </span>
+                </div>
+              </div>
 
-          <div className="row-flex" style={{ marginBottom: 14 }}>
-            <span className="muted" style={{ fontSize: 12 }}>
-              每人分攤
-            </span>
-            <span
-              className="yr-mono"
-              style={{
-                font: "700 14px/1 var(--yr-font-mono)",
-                color: "var(--yr-brand-500)",
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              NT${fmt(perPerson)}
-            </span>
-          </div>
-
-          <div className="muted" style={{ fontSize: 12, marginBottom: 8 }}>
-            分給 {splitMembers.length} 人
-          </div>
-          <div className="mem-pick" style={{ marginBottom: 16 }}>
-            {splitMembers.map((m) => (
-              <div
-                key={m.id}
-                className="mem-pill on"
-                style={{ cursor: "default" }}
-              >
-                <Avatar member={m} />
-                <span>
-                  {m.zh}
-                  {m.isMe ? " (我)" : ""}
+              <div className="row-flex" style={{ marginBottom: 14 }}>
+                <span className="muted" style={{ fontSize: 12 }}>
+                  每人分攤
+                </span>
+                <span
+                  className="yr-mono"
+                  style={{
+                    font: "700 14px/1 var(--yr-font-mono)",
+                    color: "var(--yr-brand-500)",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  NT${fmt(perPerson)}
                 </span>
               </div>
-            ))}
-          </div>
+
+              <div className="muted" style={{ fontSize: 12, marginBottom: 8 }}>
+                分給 {splitMembers.length} 人
+              </div>
+              <div className="mem-pick" style={{ marginBottom: 16 }}>
+                {splitMembers.map((m) => (
+                  <div
+                    key={m.id}
+                    className="mem-pill on"
+                    style={{ cursor: "default" }}
+                  >
+                    <Avatar member={m} />
+                    <span>
+                      {m.zh}
+                      {m.isMe ? " (我)" : ""}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
 
           <div className="btn-row">
             <button className="btn btn--danger" onClick={onDelete}>

@@ -164,7 +164,7 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 16px 16px 110px;
+  padding: 16px 16px calc(110px + env(safe-area-inset-bottom, 0px));
   background: var(--yr-gray-50);
 }
 .main.no-pad { padding: 0 0 100px; }
@@ -176,8 +176,8 @@
   width: 100%;
   max-width: 430px;
   transform: translateX(-50%);
-  height: 84px;
-  padding: 8px 8px 28px;
+  height: calc(84px + env(safe-area-inset-bottom, 0px));
+  padding: 8px 8px calc(28px + env(safe-area-inset-bottom, 0px));
   background: rgba(255,255,255,0.94);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -238,7 +238,8 @@
   flex: none;
   background: linear-gradient(180deg, #1B3A66 0%, #2D5687 60%, #325E94 100%);
   color: #fff;
-  padding: 56px 20px 24px;
+  /* Clear the device notch when present; stay compact otherwise. */
+  padding: max(env(safe-area-inset-top, 0px), 12px) 20px 24px;
   position: relative;
   overflow: hidden;
 }
@@ -365,7 +366,7 @@
   background: var(--yr-gray-50);
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
-  margin-top: -16px;
+  margin-top: 0;
   padding-top: 18px;
   position: relative;
   z-index: 2;
@@ -667,7 +668,7 @@
 .sticky-cta {
   position: sticky;
   bottom: 0; left: 0; right: 0;
-  padding: 14px 16px 30px;
+  padding: 14px 16px calc(18px + env(safe-area-inset-bottom, 0px));
   background: rgba(255,255,255,0.94);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);

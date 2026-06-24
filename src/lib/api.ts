@@ -50,6 +50,12 @@ export const api = {
       body: { action, amount },
     }),
 
+  renameGroup: (groupId: string, name: string) =>
+    call(`/api/groups/${encodeURIComponent(groupId)}`, {
+      method: "PATCH",
+      body: { action: "rename", name },
+    }),
+
   saveExpense: (groupId: string, expense: Expense) =>
     call(`/api/groups/${encodeURIComponent(groupId)}/expenses`, {
       method: "POST",
@@ -107,6 +113,12 @@ export const api = {
     call(`/api/groups/${encodeURIComponent(groupId)}/transfer-admin`, {
       method: "POST",
       body: { memberClientId },
+    }),
+
+  uploadAvatar: (dataUrl: string) =>
+    call<{ avatarUrl: string }>("/api/avatar", {
+      method: "POST",
+      body: { dataUrl },
     }),
 };
 

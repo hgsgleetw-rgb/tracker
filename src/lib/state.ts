@@ -5,7 +5,7 @@ import type { AppState, Group, Member, Expense } from "@/app/_components/data";
 // Shape of a Group row with its members + expenses + splits + requests included.
 type GroupWithRelations = Prisma.GroupGetPayload<{
   include: {
-    members: true;
+    members: { include: { user: { select: { id: true; avatarVersion: true } } } };
     expenses: { include: { splits: true } };
     requests: true;
   };
@@ -40,6 +40,10 @@ function toClientGroup(g: GroupWithRelations, viewerUserId: string): Group {
       isMe: m.userId === viewerUserId,
       isUser: m.userId !== null,
       isAdmin: m.userId !== null && m.userId === g.userId,
+      avatarUrl:
+        m.user && m.user.avatarVersion > 0
+          ? `/api/avatar/${m.user.id}?v=${m.user.avatarVersion}`
+          : undefined,
     })),
     expenses: g.expenses.map((e) => ({
       id: e.clientId,
@@ -49,6 +53,7 @@ function toClientGroup(g: GroupWithRelations, viewerUserId: string): Group {
       payerId: e.payerId,
       amount: e.amount,
       splitWith: e.splits.map((s) => s.memberId),
+      fromPool: e.fromPool,
     })),
     // Only the admin needs to see (and act on) pending requests.
     pendingRequests: isAdmin
@@ -64,7 +69,10 @@ export async function loadAppState(userId: string): Promise<AppState> {
     where: { members: { some: { userId } } },
     orderBy: { position: "asc" },
     include: {
-      members: { orderBy: { position: "asc" } },
+      members: {
+        orderBy: { position: "asc" },
+        include: { user: { select: { id: true, avatarVersion: true } } },
+      },
       expenses: { orderBy: { at: "desc" }, include: { splits: true } },
       requests: true,
     },
@@ -132,6 +140,7 @@ export async function persistGroup(
           note: e.note ?? "",
           amount: e.amount,
           payerId: e.payerId,
+          fromPool: !!e.fromPool,
           at: new Date(e.at),
           splits: { create: e.splitWith.map((memberId) => ({ memberId })) },
         })),
@@ -156,6 +165,7 @@ export async function upsertExpense(dbGroupId: string, e: Expense): Promise<void
           note: e.note ?? "",
           amount: e.amount,
           payerId: e.payerId,
+          fromPool: !!e.fromPool,
           at: new Date(e.at),
           splits: { create: e.splitWith.map((memberId) => ({ memberId })) },
         },
@@ -169,6 +179,7 @@ export async function upsertExpense(dbGroupId: string, e: Expense): Promise<void
           note: e.note ?? "",
           amount: e.amount,
           payerId: e.payerId,
+          fromPool: !!e.fromPool,
           at: new Date(e.at),
           splits: { create: e.splitWith.map((memberId) => ({ memberId })) },
         },

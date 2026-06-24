@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Member,
   Expense,
@@ -22,6 +23,7 @@ interface DashboardProps {
   settleSuggestions: Transfer[];
   groupName: string;
   usePool: boolean;
+  isAdmin: boolean;
   onTab: (tab: string) => void;
   onAdd: () => void;
   onTopUp: () => void;
@@ -29,6 +31,7 @@ interface DashboardProps {
   openSettlement: () => void;
   openHistory: () => void;
   onSwitchGroup: () => void;
+  onRenameGroup: (name: string) => void;
 }
 
 export default function Dashboard({
@@ -39,6 +42,7 @@ export default function Dashboard({
   settleSuggestions,
   groupName,
   usePool,
+  isAdmin,
   onTab,
   onAdd,
   onTopUp,
@@ -46,9 +50,18 @@ export default function Dashboard({
   openSettlement,
   openHistory,
   onSwitchGroup,
+  onRenameGroup,
 }: DashboardProps) {
   const me = team.find((m) => m.isMe);
   const myNet = me ? balances[me.id] || 0 : 0;
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState(groupName);
+
+  const commitName = () => {
+    setEditingName(false);
+    const v = nameDraft.trim();
+    if (v && v !== groupName) onRenameGroup(v);
+  };
 
   // This month
   const monthStart = new Date();
@@ -101,7 +114,41 @@ export default function Dashboard({
               <Avatar member={me} size="lg" />
             </div>
             <div>
-              <div className="hero-greet">{groupName || "我的群組"}</div>
+              {editingName ? (
+                <input
+                  className="hero-greet"
+                  value={nameDraft}
+                  autoFocus
+                  maxLength={30}
+                  onChange={(e) => setNameDraft(e.target.value)}
+                  onBlur={commitName}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") commitName();
+                    if (e.key === "Escape") setEditingName(false);
+                  }}
+                  style={{
+                    background: "rgba(255,255,255,0.16)",
+                    border: "none",
+                    borderRadius: 6,
+                    color: "#fff",
+                    padding: "1px 6px",
+                    maxWidth: 200,
+                  }}
+                />
+              ) : (
+                <div
+                  className="hero-greet"
+                  onDoubleClick={() => {
+                    if (!isAdmin) return;
+                    setNameDraft(groupName);
+                    setEditingName(true);
+                  }}
+                  title={isAdmin ? "點兩下改名" : undefined}
+                  style={{ cursor: isAdmin ? "text" : "default" }}
+                >
+                  {groupName || "我的群組"}
+                </div>
+              )}
               <div className="hero-status">
                 <span className="dot" />
                 {(() => {

@@ -20,6 +20,7 @@ interface MembersProps {
   onReject: (reqId: string) => void;
   onLeave: () => void;
   onTransferAdmin: (id: string) => void;
+  onUploadAvatar: (file: File) => void;
 }
 
 export default function Members({
@@ -37,6 +38,7 @@ export default function Members({
   onReject,
   onLeave,
   onTransferAdmin,
+  onUploadAvatar,
 }: MembersProps) {
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
@@ -106,6 +108,30 @@ export default function Members({
                     >
                       設為管理員
                     </button>
+                  )}
+                  {m.isMe && (
+                    <label
+                      style={{
+                        display: "block",
+                        marginTop: 4,
+                        color: "var(--yr-brand-500)",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      更換大頭照
+                      <input
+                        type="file"
+                        accept="image/*"
+                        hidden
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) onUploadAvatar(f);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
                   )}
                 </div>
                 <div

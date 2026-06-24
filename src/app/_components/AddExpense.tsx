@@ -8,6 +8,7 @@ import AppIcon from "./Icons";
 interface AddExpenseProps {
   team: Member[];
   editing?: Expense | null;
+  usePool: boolean;
   onCancel: () => void;
   onSave: (e: Expense) => void;
 }
@@ -15,12 +16,17 @@ interface AddExpenseProps {
 export default function AddExpense({
   team,
   editing,
+  usePool,
   onCancel,
   onSave,
 }: AddExpenseProps) {
   const [amount, setAmount] = useState(editing ? String(editing.amount) : "");
   const [category, setCategory] = useState(editing?.category ?? "coffee");
   const [note, setNote] = useState(editing?.note ?? "");
+  // In a fund group, new expenses default to paying from the fund.
+  const [fromPool, setFromPool] = useState(
+    editing ? !!editing.fromPool : usePool
+  );
   const [payerId, setPayerId] = useState(
     editing?.payerId ?? team.find((m) => m.isMe)?.id ?? ""
   );
@@ -43,7 +49,9 @@ export default function AddExpense({
 
   const amt = parseInt(amount, 10) || 0;
   const perPerson = splitWith.length ? Math.round(amt / splitWith.length) : 0;
-  const valid = amt > 0 && splitWith.length > 0 && payerId;
+  const valid = fromPool
+    ? amt > 0
+    : amt > 0 && splitWith.length > 0 && !!payerId;
 
   const submit = () => {
     if (!valid) return;
@@ -52,9 +60,10 @@ export default function AddExpense({
       at: editing ? editing.at : Date.now(),
       category,
       note: note.trim(),
-      payerId,
+      payerId: fromPool ? (team.find((m) => m.isMe)?.id ?? payerId) : payerId,
       amount: amt,
-      splitWith: [...splitWith],
+      splitWith: fromPool ? [] : [...splitWith],
+      fromPool,
     });
   };
 
@@ -103,14 +112,47 @@ export default function AddExpense({
             />
           </div>
         </div>
-        <div className="pp-chip-row">
-          <div
-            className={`pp-chip ${amt > 0 && splitWith.length > 0 ? "" : "pp-chip--dim"}`}
-          >
-            <span>每人</span>
-            <strong className="yr-mono">NT${fmt(perPerson)}</strong>
+        {!fromPool && (
+          <div className="pp-chip-row">
+            <div
+              className={`pp-chip ${amt > 0 && splitWith.length > 0 ? "" : "pp-chip--dim"}`}
+            >
+              <span>每人</span>
+              <strong className="yr-mono">NT${fmt(perPerson)}</strong>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Payment source (fund groups only) */}
+        {usePool && (
+          <>
+            <div className="sec-title">
+              <h3>付款來源</h3>
+            </div>
+            <div className="onb-toggle-row">
+              <button
+                className={`onb-pill ${fromPool ? "on" : ""}`}
+                onClick={() => setFromPool(true)}
+              >
+                <AppIcon name="wallet" size={18} />
+                <div>
+                  <b>公基金</b>
+                  <small>從共同基金扣款</small>
+                </div>
+              </button>
+              <button
+                className={`onb-pill ${!fromPool ? "on" : ""}`}
+                onClick={() => setFromPool(false)}
+              >
+                <AppIcon name="scale" size={18} />
+                <div>
+                  <b>個人付</b>
+                  <small>私人代墊、互相分帳</small>
+                </div>
+              </button>
+            </div>
+          </>
+        )}
 
         {/* Category */}
         <div className="sec-title">
@@ -144,48 +186,59 @@ export default function AddExpense({
           />
         </div>
 
-        {/* Payer */}
-        <div className="sec-title">
-          <h3>誰付的錢</h3>
-        </div>
-        <div className="mem-pick">
-          {team.map((m) => (
-            <button
-              key={m.id}
-              className={`mem-pill ${payerId === m.id ? "on" : ""}`}
-              onClick={() => setPayerId(m.id)}
-            >
-              <Avatar member={m} />
-              <span>
-                {m.zh}
-                {m.isMe ? " (我)" : ""}
-              </span>
-            </button>
-          ))}
-        </div>
+        {fromPool ? (
+          <div
+            className="card"
+            style={{ marginTop: 14, fontSize: 13, color: "var(--yr-fg-muted)" }}
+          >
+            這筆由<b style={{ color: "var(--yr-fg)" }}>公基金</b>支付，會從基金餘額扣除，不會產生個人欠款。
+          </div>
+        ) : (
+          <>
+            {/* Payer */}
+            <div className="sec-title">
+              <h3>誰付的錢</h3>
+            </div>
+            <div className="mem-pick">
+              {team.map((m) => (
+                <button
+                  key={m.id}
+                  className={`mem-pill ${payerId === m.id ? "on" : ""}`}
+                  onClick={() => setPayerId(m.id)}
+                >
+                  <Avatar member={m} />
+                  <span>
+                    {m.zh}
+                    {m.isMe ? " (我)" : ""}
+                  </span>
+                </button>
+              ))}
+            </div>
 
-        {/* Split */}
-        <div className="sec-title">
-          <h3>分給誰（{splitWith.length}人）</h3>
-          <button className="more" onClick={toggleAll}>
-            {allOn ? "清空" : "全選"}
-          </button>
-        </div>
-        <div className="mem-pick">
-          {team.map((m) => (
-            <button
-              key={m.id}
-              className={`mem-pill ${splitWith.includes(m.id) ? "on" : ""}`}
-              onClick={() => toggle(m.id)}
-            >
-              <Avatar member={m} />
-              <span>
-                {m.zh}
-                {m.isMe ? " (我)" : ""}
-              </span>
-            </button>
-          ))}
-        </div>
+            {/* Split */}
+            <div className="sec-title">
+              <h3>分給誰（{splitWith.length}人）</h3>
+              <button className="more" onClick={toggleAll}>
+                {allOn ? "清空" : "全選"}
+              </button>
+            </div>
+            <div className="mem-pick">
+              {team.map((m) => (
+                <button
+                  key={m.id}
+                  className={`mem-pill ${splitWith.includes(m.id) ? "on" : ""}`}
+                  onClick={() => toggle(m.id)}
+                >
+                  <Avatar member={m} />
+                  <span>
+                    {m.zh}
+                    {m.isMe ? " (我)" : ""}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       <div className="sticky-cta">

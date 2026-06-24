@@ -717,6 +717,7 @@ export default function App() {
         <ExpenseDetail
           expense={expenses.find((e) => e.id === route.expense.id)}
           team={team}
+          isAdmin={activeGroup?.isAdmin ?? false}
           onClose={() => setRoute({ name: "tab" })}
           onEdit={() => {
             const exp = expenses.find((e) => e.id === route.expense.id);

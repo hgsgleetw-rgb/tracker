@@ -239,7 +239,7 @@
   background: linear-gradient(180deg, #1B3A66 0%, #2D5687 60%, #325E94 100%);
   color: #fff;
   /* Clear the device notch when present; stay compact otherwise. */
-  padding: max(env(safe-area-inset-top, 0px), 12px) 20px 24px;
+  padding: max(env(safe-area-inset-top, 0px), 12px) 20px 40px;
   position: relative;
   overflow: hidden;
 }
@@ -368,7 +368,7 @@
   border-top-right-radius: 20px;
   /* Overlap up into the hero so the rounded top corners show against blue. */
   margin-top: -16px;
-  padding-top: 18px;
+  padding-top: 26px;
   position: relative;
   z-index: 2;
 }

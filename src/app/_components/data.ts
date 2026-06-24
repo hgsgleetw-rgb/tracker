@@ -27,6 +27,8 @@ export interface Expense {
   amount: number;
   splitWith: string[];
   fromPool?: boolean; // paid from the shared fund (no personal debt)
+  editedAt?: number; // last edit time (fund expenses only)
+  editedByName?: string; // who last edited (fund expenses only)
 }
 
 export interface Transfer {

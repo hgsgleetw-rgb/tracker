@@ -86,8 +86,10 @@ model Expense {
   category  String
   note      String         @default("")
   amount    Int
-  payerId   String // member clientId (informational when fromPool)
-  fromPool  Boolean        @default(false) // paid from the shared fund (no personal debt)
+  payerId      String // member clientId (informational when fromPool)
+  fromPool     Boolean        @default(false) // paid from the shared fund (no personal debt)
+  editedAt     DateTime? // last edit time (fund expenses only)
+  editedByName String? // who last edited (fund expenses only)
   at        DateTime // when the expense happened
   createdAt DateTime       @default(now())
   groupId   String

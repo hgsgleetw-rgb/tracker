@@ -7,6 +7,7 @@ import AppIcon from "./Icons";
 interface ExpenseDetailProps {
   expense: Expense | undefined;
   team: Member[];
+  isAdmin: boolean;
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -15,6 +16,7 @@ interface ExpenseDetailProps {
 export default function ExpenseDetail({
   expense,
   team,
+  isAdmin,
   onClose,
   onEdit,
   onDelete,
@@ -27,6 +29,12 @@ export default function ExpenseDetail({
     .map((id) => team.find((m) => m.id === id))
     .filter((m): m is Member => !!m);
   const perPerson = splitMembers.length > 0 ? Math.round(expense.amount / splitMembers.length) : 0;
+
+  // Fund expenses: anyone can edit. Personal: only the payer themselves
+  // (or admin if the payer is an unclaimed label).
+  const canEdit = expense.fromPool
+    ? true
+    : !!payer?.isMe || (!payer?.isUser && isAdmin);
 
   return (
     <>
@@ -156,14 +164,33 @@ export default function ExpenseDetail({
             </>
           )}
 
-          <div className="btn-row">
-            <button className="btn btn--danger" onClick={onDelete}>
-              <AppIcon name="trash" size={16} /> 刪除
-            </button>
-            <button className="btn btn--primary" onClick={onEdit}>
-              編輯
-            </button>
-          </div>
+          {expense.editedAt && (
+            <div
+              className="muted"
+              style={{ fontSize: 11, marginBottom: 12, textAlign: "center" }}
+            >
+              已編輯{expense.editedByName ? ` · ${expense.editedByName}` : ""} ·{" "}
+              {dayLabel(expense.editedAt)} {timeLabel(expense.editedAt)}
+            </div>
+          )}
+
+          {canEdit ? (
+            <div className="btn-row">
+              <button className="btn btn--danger" onClick={onDelete}>
+                <AppIcon name="trash" size={16} /> 刪除
+              </button>
+              <button className="btn btn--primary" onClick={onEdit}>
+                編輯
+              </button>
+            </div>
+          ) : (
+            <div
+              className="muted"
+              style={{ fontSize: 12, textAlign: "center", padding: "4px 0" }}
+            >
+              只有付款本人能修改這筆
+            </div>
+          )}
         </div>
       </div>
     </>

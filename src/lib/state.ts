@@ -54,6 +54,8 @@ function toClientGroup(g: GroupWithRelations, viewerUserId: string): Group {
       amount: e.amount,
       splitWith: e.splits.map((s) => s.memberId),
       fromPool: e.fromPool,
+      editedAt: e.editedAt ? e.editedAt.getTime() : undefined,
+      editedByName: e.editedByName ?? undefined,
     })),
     // Only the admin needs to see (and act on) pending requests.
     pendingRequests: isAdmin
@@ -149,8 +151,44 @@ export async function persistGroup(
   });
 }
 
+/**
+ * Decide whether `userId` may edit/delete an existing expense.
+ * Returns "new" when no such expense exists yet (creating is always allowed
+ * for members), "allowed", or "denied".
+ *  - Fund expenses: anyone may edit (communal money).
+ *  - Personal expenses: only the payer themselves; if the payer is an
+ *    unclaimed label, the group admin may manage it.
+ */
+export async function canEditExpense(
+  dbGroupId: string,
+  clientId: string,
+  userId: string
+): Promise<"new" | "allowed" | "denied"> {
+  const exp = await prisma.expense.findUnique({
+    where: { groupId_clientId: { groupId: dbGroupId, clientId } },
+    select: { fromPool: true, payerId: true },
+  });
+  if (!exp) return "new";
+  if (exp.fromPool) return "allowed";
+  const group = await prisma.group.findUnique({
+    where: { id: dbGroupId },
+    select: { userId: true },
+  });
+  const payer = await prisma.member.findUnique({
+    where: { groupId_clientId: { groupId: dbGroupId, clientId: exp.payerId } },
+    select: { userId: true },
+  });
+  if (payer?.userId === userId) return "allowed";
+  if (!payer?.userId && group?.userId === userId) return "allowed";
+  return "denied";
+}
+
 /** Insert or update a single expense (used for both add and edit). */
-export async function upsertExpense(dbGroupId: string, e: Expense): Promise<void> {
+export async function upsertExpense(
+  dbGroupId: string,
+  e: Expense,
+  editorName: string
+): Promise<void> {
   await prisma.$transaction(async (tx) => {
     const existing = await tx.expense.findUnique({
       where: { groupId_clientId: { groupId: dbGroupId, clientId: e.id } },
@@ -166,6 +204,9 @@ export async function upsertExpense(dbGroupId: string, e: Expense): Promise<void
           amount: e.amount,
           payerId: e.payerId,
           fromPool: !!e.fromPool,
+          // Record who last edited a fund expense (audit trail).
+          editedAt: e.fromPool ? new Date() : null,
+          editedByName: e.fromPool ? editorName : null,
           at: new Date(e.at),
           splits: { create: e.splitWith.map((memberId) => ({ memberId })) },
         },

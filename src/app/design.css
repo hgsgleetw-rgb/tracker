@@ -677,6 +677,33 @@
   z-index: 25;
 }
 
+/* ── Confirm dialog (replaces native confirm) ──────────────── */
+.confirm-back {
+  position: fixed; inset: 0;
+  background: rgba(12,12,13,0.45);
+  z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  animation: f-in 160ms ease-out;
+}
+.confirm-box {
+  width: 100%; max-width: 320px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 22px 20px 16px;
+  box-shadow: var(--yr-shadow-lg);
+}
+.confirm-msg {
+  font: 500 15px/1.5 var(--yr-font-sans);
+  color: var(--yr-fg);
+  text-align: center;
+  white-space: pre-line;
+  margin-bottom: 18px;
+}
+.confirm-actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+
 /* ── Inputs ───────────────────────────────────────────────── */
 .input {
   width: 100%;

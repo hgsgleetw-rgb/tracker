@@ -80,7 +80,18 @@ export default function App() {
   const [showCreate, setShowCreate] = useState(false);
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [joinCode, setJoinCode] = useState<string | null>(null);
+  const [confirmReq, setConfirmReq] = useState<{
+    message: string;
+    resolve: (ok: boolean) => void;
+  } | null>(null);
   const pendingSyncs = useRef(0);
+
+  // In-app confirmation (native confirm() is unreliable in the LINE webview).
+  const confirmAsync = useCallback(
+    (message: string) =>
+      new Promise<boolean>((resolve) => setConfirmReq({ message, resolve })),
+    []
+  );
 
   const pushToast = useCallback((t: Omit<ToastItem, "id">) => {
     const id = Date.now() + Math.random();
@@ -277,12 +288,12 @@ export default function App() {
     if (state.activeGroupId) renameGroupById(state.activeGroupId, name);
   };
 
-  const deleteGroup = (id: string) => {
+  const deleteGroup = async (id: string) => {
     if (state.groups.length <= 1) {
       pushToast({ title: "無法刪除", desc: "至少要保留一個群組" });
       return;
     }
-    if (!confirm("刪除這個群組？所有紀錄會一起消失。")) return;
+    if (!(await confirmAsync("刪除這個群組？所有紀錄會一起消失。"))) return;
     setState((s) => {
       const next = s.groups.filter((g) => g.id !== id);
       return {
@@ -342,9 +353,9 @@ export default function App() {
     pushToast({ title: "已新增成員", desc: name });
   };
 
-  const removeMember = (id: string) => {
+  const removeMember = async (id: string) => {
     const member = team.find((m) => m.id === id);
-    if (!confirm(`確定要移除成員${member ? `「${member.zh}」` : ""}？`)) return;
+    if (!(await confirmAsync(`確定要移除成員${member ? `「${member.zh}」` : ""}？`))) return;
     const gid = state.activeGroupId;
     updateActiveGroup((g) => ({
       team: g.team.filter((m) => m.id !== id),
@@ -353,18 +364,16 @@ export default function App() {
     pushToast({ title: "已移除", desc: member?.zh });
   };
 
-  const clearAllData = () => {
-    if (!confirm("確定要清除這個群組的所有紀錄？")) return;
+  const clearAllData = async () => {
+    if (!(await confirmAsync("確定要清除這個群組的所有紀錄？"))) return;
     const gid = state.activeGroupId;
     updateActiveGroup(() => ({ expenses: [], pool: 0 }));
     if (gid) sync(api.groupAction(gid, "clear"));
     pushToast({ title: "已清除所有紀錄" });
   };
 
-  const markAllPaid = () => {
-    if (
-      !confirm("將所有支出歸零？這會清除歷史，但保留成員與池子餘額。")
-    )
+  const markAllPaid = async () => {
+    if (!(await confirmAsync("將所有支出歸零？這會清除歷史，但保留成員與池子餘額。")))
       return;
     const gid = state.activeGroupId;
     updateActiveGroup(() => ({ expenses: [] }));
@@ -426,10 +435,10 @@ export default function App() {
     clearJoinFromUrl();
   };
 
-  const approveRequest = (reqId: string) => {
+  const approveRequest = async (reqId: string) => {
     const gid = state.activeGroupId;
     if (!gid) return;
-    if (!confirm("核准這位成員加入群組？")) return;
+    if (!(await confirmAsync("核准這位成員加入群組？"))) return;
     updateActiveGroup((g) => ({
       pendingRequests: (g.pendingRequests ?? []).filter((r) => r.id !== reqId),
     }));
@@ -437,10 +446,10 @@ export default function App() {
     pushToast({ title: "已核准加入" });
   };
 
-  const rejectRequest = (reqId: string) => {
+  const rejectRequest = async (reqId: string) => {
     const gid = state.activeGroupId;
     if (!gid) return;
-    if (!confirm("拒絕這個加入申請？")) return;
+    if (!(await confirmAsync("拒絕這個加入申請？"))) return;
     updateActiveGroup((g) => ({
       pendingRequests: (g.pendingRequests ?? []).filter((r) => r.id !== reqId),
     }));
@@ -448,24 +457,25 @@ export default function App() {
     pushToast({ title: "已拒絕" });
   };
 
-  const transferAdmin = (memberId: string) => {
+  const transferAdmin = async (memberId: string) => {
     const gid = state.activeGroupId;
     if (!gid) return;
     const m = team.find((x) => x.id === memberId);
-    if (!confirm(`要把管理員轉給「${m?.zh ?? ""}」？轉移後你會變成一般成員。`)) return;
+    if (!(await confirmAsync(`要把管理員轉給「${m?.zh ?? ""}」？轉移後你會變成一般成員。`)))
+      return;
     // Re-fetch so admin/member flags update for the whole group.
     sync(api.transferAdmin(gid, memberId).then(() => api.getState()).then(setState));
     pushToast({ title: "已轉移管理員", desc: m?.zh });
   };
 
-  const leaveGroup = () => {
+  const leaveGroup = async () => {
     const gid = state.activeGroupId;
     if (!gid) return;
     const gname = activeGroup?.name ?? "這個群組";
     if (
-      !confirm(
+      !(await confirmAsync(
         `確定要退出「${gname}」？\n你的名字與紀錄會保留給其他成員，但你將無法再看到這個群組。`
-      )
+      ))
     )
       return;
     setState((s) => {
@@ -747,6 +757,40 @@ export default function App() {
 
       {showTutorial && (
         <TutorialOverlay onSkip={skipTutorial} onFinish={finishTutorial} />
+      )}
+
+      {confirmReq && (
+        <div
+          className="confirm-back"
+          onClick={() => {
+            confirmReq.resolve(false);
+            setConfirmReq(null);
+          }}
+        >
+          <div className="confirm-box" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-msg">{confirmReq.message}</div>
+            <div className="confirm-actions">
+              <button
+                className="btn btn--secondary"
+                onClick={() => {
+                  confirmReq.resolve(false);
+                  setConfirmReq(null);
+                }}
+              >
+                取消
+              </button>
+              <button
+                className="btn btn--primary"
+                onClick={() => {
+                  confirmReq.resolve(true);
+                  setConfirmReq(null);
+                }}
+              >
+                確定
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <Toast toasts={toasts} />

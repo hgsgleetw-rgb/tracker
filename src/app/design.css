@@ -650,7 +650,7 @@
 .btn--primary {
   background: var(--yr-gradient-primary);
   color: #fff;
-  border-color: rgba(12,12,13,0.15);
+  border-color: transparent; /* avoid a dark line on the light top of the gradient */
 }
 .btn--primary:active { background: var(--yr-gradient-primary-hover); }
 .btn--secondary {

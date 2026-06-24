@@ -208,6 +208,12 @@ export default function ExpenseDetail({
             >
               已編輯{expense.editedByName ? ` · ${expense.editedByName}` : ""} ·{" "}
               {dayLabel(expense.editedAt)} {timeLabel(expense.editedAt)}
+              {expense.prevAmount != null && (
+                <>
+                  {" · 原 NT$"}
+                  {fmt(expense.prevAmount)}
+                </>
+              )}
             </div>
           )}
 

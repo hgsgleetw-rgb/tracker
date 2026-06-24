@@ -179,6 +179,13 @@ export default function AppIcon({
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
       );
+    case "edit":
+      return (
+        <svg {...p}>
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+        </svg>
+      );
     case "more":
       return (
         <svg {...p}>

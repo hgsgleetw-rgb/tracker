@@ -262,14 +262,19 @@ export default function App() {
     }
   };
 
-  const renameGroup = (name: string) => {
-    const gid = state.activeGroupId;
-    if (!gid) return;
+  const renameGroupById = (id: string, name: string) => {
     const trimmed = name.trim();
     if (!trimmed) return;
-    updateActiveGroup(() => ({ name: trimmed }));
-    sync(api.renameGroup(gid, trimmed));
+    setState((s) => ({
+      ...s,
+      groups: s.groups.map((g) => (g.id === id ? { ...g, name: trimmed } : g)),
+    }));
+    sync(api.renameGroup(id, trimmed));
     pushToast({ title: "已更名", desc: trimmed });
+  };
+
+  const renameGroup = (name: string) => {
+    if (state.activeGroupId) renameGroupById(state.activeGroupId, name);
   };
 
   const deleteGroup = (id: string) => {
@@ -729,6 +734,7 @@ export default function App() {
           onSelect={switchGroup}
           onCreate={() => { setShowSwitcher(false); setShowCreate(true); }}
           onDelete={deleteGroup}
+          onRename={renameGroupById}
         />
       )}
 

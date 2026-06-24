@@ -60,6 +60,7 @@ export default function Dashboard({
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(groupName);
   const [settleDetail, setSettleDetail] = useState<Transfer | null>(null);
+  const [showTrend, setShowTrend] = useState(false);
 
   const commitName = () => {
     setEditingName(false);
@@ -294,12 +295,16 @@ export default function Dashboard({
               <h3>這個月花了多少</h3>
             </div>
             <div className="kpis">
-              <div className="kpi kpi--spend">
+              <div
+                className="kpi kpi--spend"
+                onClick={() => monthExpenses.length > 0 && setShowTrend(true)}
+                style={{ cursor: monthExpenses.length > 0 ? "pointer" : "default" }}
+              >
                 <div className="l">
                   <div className="kpi-ico">
                     <AppIcon name="wallet" size={14} strokeWidth={2.2} />
                   </div>
-                  <span>本月支出</span>
+                  <span>本月支出{monthExpenses.length > 0 ? " · 看走勢" : ""}</span>
                 </div>
                 <div className="v">NT${fmt(monthTotal)}</div>
                 {lastMonthTotal === 0 ? (
@@ -465,6 +470,85 @@ export default function Dashboard({
           onClose={() => setSettleDetail(null)}
         />
       )}
+
+      {showTrend && (() => {
+        const today = new Date();
+        const days = today.getDate(); // 1..today
+        const daily = new Array(days).fill(0);
+        monthExpenses.forEach((e) => {
+          const d = new Date(e.at).getDate();
+          if (d >= 1 && d <= days) daily[d - 1] += e.amount;
+        });
+        const max = Math.max(...daily, 1);
+        const peak = Math.max(...daily, 0);
+        return (
+          <>
+            <div className="sheet-back" onClick={() => setShowTrend(false)} />
+            <div className="sheet">
+              <div className="sheet__handle" />
+              <div
+                style={{
+                  font: "700 16px/1.3 var(--yr-font-sans)",
+                  color: "var(--yr-fg)",
+                  textAlign: "center",
+                }}
+              >
+                本月花費走勢
+              </div>
+              <div
+                className="muted"
+                style={{ fontSize: 12, textAlign: "center", marginBottom: 16 }}
+              >
+                共 NT${fmt(monthTotal)} · {monthExpenses.length} 筆 · 單日最高 NT${fmt(peak)}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-end",
+                  gap: days > 20 ? 2 : 4,
+                  height: 150,
+                  padding: "0 4px",
+                }}
+              >
+                {daily.map((v, i) => (
+                  <div
+                    key={i}
+                    title={`${i + 1}日 · NT$${fmt(v)}`}
+                    style={{ flex: 1, display: "flex", alignItems: "flex-end", height: "100%" }}
+                  >
+                    <div
+                      style={{
+                        width: "100%",
+                        height: `${Math.max(v > 0 ? 4 : 0, (v / max) * 100)}%`,
+                        background:
+                          i === days - 1
+                            ? "var(--yr-brand-500)"
+                            : "var(--yr-brand-300)",
+                        borderRadius: "3px 3px 0 0",
+                        transition: "height 200ms var(--yr-ease-standard)",
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginTop: 6,
+                  padding: "0 4px",
+                  font: "500 10px/1 var(--yr-font-sans)",
+                  color: "var(--yr-fg-subtle)",
+                }}
+              >
+                <span>1 日</span>
+                <span>{days} 日（今天）</span>
+              </div>
+              <div style={{ height: 10 }} />
+            </div>
+          </>
+        );
+      })()}
     </>
   );
 }

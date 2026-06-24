@@ -232,9 +232,9 @@ export async function upsertExpense(
           amount: e.amount,
           payerId: e.payerId,
           fromPool: !!e.fromPool,
-          // Record who last edited a fund expense (audit trail).
-          editedAt: e.fromPool ? new Date() : null,
-          editedByName: e.fromPool ? editorName : null,
+          // Record every edit (audit trail) — shown as 已編輯 in the UI.
+          editedAt: new Date(),
+          editedByName: editorName,
           at: new Date(e.at),
           splits: { create: e.splitWith.map((memberId) => ({ memberId })) },
         },

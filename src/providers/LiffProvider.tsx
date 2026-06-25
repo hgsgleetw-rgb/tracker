@@ -44,6 +44,29 @@ function decodeJwt(token: string): Record<string, unknown> {
   return JSON.parse(json);
 }
 
+// A Google ID token is valid for ~1h. Treat it as expired 60s early.
+function isJwtExpired(token: string): boolean {
+  try {
+    const exp = Number(decodeJwt(token).exp);
+    return !exp || exp * 1000 < Date.now() + 60_000;
+  } catch {
+    return true;
+  }
+}
+
+function profileFromJwt(token: string): LiffProfile {
+  try {
+    const p = decodeJwt(token);
+    return {
+      userId: String(p.sub ?? ""),
+      displayName: String(p.name ?? p.email ?? "我"),
+      pictureUrl: p.picture ? String(p.picture) : undefined,
+    };
+  } catch {
+    return { userId: "", displayName: "我" };
+  }
+}
+
 export function LiffProvider({ children }: { children: React.ReactNode }) {
   const [liff, setLiff] = useState<typeof Liff | null>(null);
   const [profile, setProfile] = useState<LiffProfile | null>(null);
@@ -91,6 +114,17 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
           await useLineSession();
           return;
         }
+        // Restore a previous Google session if the saved token is still valid
+        // (~1h) — skip the login screen entirely, no re-click needed.
+        if (saved === "google") {
+          const cred = localStorage.getItem("google-credential");
+          if (cred && !isJwtExpired(cred)) {
+            setTokenGetter(() => `google:${cred}`);
+            setProfile(profileFromJwt(cred));
+            setIsReady(true);
+            return;
+          }
+        }
         setNeedsLogin(true);
       } catch (e) {
         setError(e instanceof Error ? e.message : "登入初始化失敗");
@@ -109,18 +143,10 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
   const onGoogleCredential = (credential: string) => {
     try {
       localStorage.setItem("auth-provider", "google");
+      localStorage.setItem("google-credential", credential);
     } catch {}
     setTokenGetter(() => `google:${credential}`);
-    try {
-      const payload = decodeJwt(credential);
-      setProfile({
-        userId: String(payload.sub ?? ""),
-        displayName: String(payload.name ?? payload.email ?? "我"),
-        pictureUrl: payload.picture ? String(payload.picture) : undefined,
-      });
-    } catch {
-      setProfile({ userId: "", displayName: "我" });
-    }
+    setProfile(profileFromJwt(credential));
     setNeedsLogin(false);
     setIsReady(true);
   };

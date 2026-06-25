@@ -8,8 +8,13 @@ import AppIcon from "./Icons";
 declare global { interface Window { google?: any } }
 
 export default function LoginScreen() {
-  const { googleClientId, loginLine, onGoogleCredential } = useLiff();
+  const { googleClientId, lastGoogle, loginLine, onGoogleCredential } = useLiff();
   const googleDiv = useRef<HTMLDivElement>(null);
+
+  // Re-trigger Google sign-in for the remembered account.
+  const continueGoogle = () => {
+    window.google?.accounts?.id?.prompt();
+  };
 
   useEffect(() => {
     if (!googleClientId) return;
@@ -65,27 +70,59 @@ export default function LoginScreen() {
       <h1 className="login-title">記帳</h1>
       <p className="login-sub">選擇登入方式，開始和大家一起記帳</p>
 
-      <div className="login-actions">
-        <button className="login-btn" onClick={loginLine}>
-          <span className="login-btn-icon" aria-hidden>
-            <svg viewBox="0 0 24 24" width="20" height="20">
-              <rect width="24" height="24" rx="6" fill="#06C755" />
-              <path
-                d="M12 5.6c-3.9 0-7 2.5-7 5.6 0 2.8 2.5 5.1 5.9 5.5.2 0 .5.1.6.3.1.2 0 .5 0 .6l-.1.6c0 .2-.1.7.6.4.7-.3 3.9-2.3 5.3-3.9 1-1 1.5-2.1 1.5-3.5C20.3 8.1 17.2 5.6 12 5.6z"
-                fill="#fff"
-              />
-            </svg>
-          </span>
-          <span className="login-btn-label">用 LINE 登入</span>
-        </button>
+      <button className="login-btn" onClick={loginLine}>
+        <span className="login-btn-icon" aria-hidden>
+          <svg viewBox="0 0 24 24" width="20" height="20">
+            <rect width="24" height="24" rx="6" fill="#06C755" />
+            <path
+              d="M12 5.6c-3.9 0-7 2.5-7 5.6 0 2.8 2.5 5.1 5.9 5.5.2 0 .5.1.6.3.1.2 0 .5 0 .6l-.1.6c0 .2-.1.7.6.4.7-.3 3.9-2.3 5.3-3.9 1-1 1.5-2.1 1.5-3.5C20.3 8.1 17.2 5.6 12 5.6z"
+              fill="#fff"
+            />
+          </svg>
+        </span>
+        <span className="login-btn-label">用 LINE 登入</span>
+      </button>
 
-        {googleClientId ? (
-          <>
-            <div className="login-or">或</div>
-            <div ref={googleDiv} className="login-google" />
-          </>
-        ) : null}
-      </div>
+      {googleClientId ? (
+        <>
+          <div className="login-or">或</div>
+
+          {lastGoogle ? (
+            <button className="login-remember" onClick={continueGoogle}>
+              {lastGoogle.pictureUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  className="login-remember-avatar"
+                  src={lastGoogle.pictureUrl}
+                  alt=""
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <span className="login-remember-avatar login-remember-fallback">
+                  {(lastGoogle.displayName || "?").charAt(0).toUpperCase()}
+                </span>
+              )}
+              <span className="login-remember-text">
+                <span className="login-remember-name">
+                  以 {lastGoogle.displayName} 進入
+                </span>
+                <span className="login-remember-sub">繼續使用 Google 登入</span>
+              </span>
+              <span className="login-remember-arrow">→</span>
+            </button>
+          ) : null}
+
+          {/* Real Google sign-in button — also the "use another account" path. */}
+          <div
+            ref={googleDiv}
+            className="login-google"
+            style={lastGoogle ? { marginTop: 4, opacity: 0.85 } : undefined}
+          />
+          {lastGoogle ? (
+            <p className="login-remember-hint">換帳號請點上方 Google 按鈕</p>
+          ) : null}
+        </>
+      ) : null}
     </div>
   );
 }

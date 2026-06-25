@@ -22,6 +22,6 @@ export async function GET() {
     dbOk,
     dbErr,
     commit: process.env.VERCEL_GIT_COMMIT_SHA ?? "local",
-    feature: "hold-to-leave",
+    feature: "google-redirect",
   });
 }

@@ -251,10 +251,27 @@ export default function App() {
       groups: [...s.groups.filter((x) => !x.isDemo), g],
       activeGroupId: g.id,
     }));
-    sync(api.createGroup(g)); // server also drops any demo group
+    const created = api.createGroup(g); // server also drops any demo group
+    sync(created);
     setShowCreate(false);
     setTab("home");
     pushToast({ title: "群組已建立", desc: name });
+    return { group: g, created };
+  };
+
+  // Create the group, then immediately share/copy an invite link for it.
+  const createGroupAndInvite = async (opts: {
+    name: string;
+    usePool: boolean;
+    memberNames: string[];
+  }) => {
+    const { group, created } = createGroup(opts);
+    try {
+      await created; // the group must exist on the server before we ask for a code
+    } catch {
+      return; // sync() already surfaced the failure
+    }
+    await inviteToGroupId(group.id);
   };
 
   const switchGroup = (id: string) => {
@@ -400,6 +417,10 @@ export default function App() {
   const inviteToGroup = async () => {
     const gid = state.activeGroupId;
     if (!gid) return;
+    await inviteToGroupId(gid);
+  };
+
+  const inviteToGroupId = async (gid: string) => {
     try {
       const { code } = await api.invite(gid);
       const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
@@ -624,6 +645,7 @@ export default function App() {
             state.groups.some((g) => !g.isDemo) ? () => setShowCreate(false) : null
           }
           onCreate={createGroup}
+          onCreateAndInvite={createGroupAndInvite}
         />
       </div>
     );

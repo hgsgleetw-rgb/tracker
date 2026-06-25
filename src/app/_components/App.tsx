@@ -71,7 +71,7 @@ function resizeImage(file: File, max = 256): Promise<string> {
 }
 
 export default function App() {
-  const { liff, isReady, error: liffError, profile, needsLogin, logout } = useLiff();
+  const { liff, isReady, error: liffError, profile, needsLogin, logout, provider } = useLiff();
 
   const [state, setState] = useState<AppState>(() => defaultState());
   const [phase, setPhase] = useState<LoadPhase>("loading");
@@ -740,6 +740,7 @@ export default function App() {
           onTransferAdmin={transferAdmin}
           onUploadAvatar={uploadAvatar}
           onLogout={logoutAccount}
+          provider={provider}
         />
       );
     }

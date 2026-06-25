@@ -784,6 +784,60 @@
   margin-top: 6px;
 }
 
+/* ── Account card + logout ─────────────────────────────────── */
+.account-box {
+  background: var(--yr-surface);
+  border: 1px solid var(--yr-border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.account-id {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+.account-id-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.account-id-name {
+  font: 700 16px/1.2 var(--yr-font-sans);
+  color: var(--yr-fg);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.account-id-sub {
+  display: flex; align-items: center; gap: 6px;
+  font: 500 12px/1 var(--yr-font-sans);
+  color: var(--yr-fg-muted);
+}
+.account-badge {
+  display: grid; place-items: center;
+  width: 16px; height: 16px;
+  border-radius: 999px;
+  font: 700 10px/1 var(--yr-font-sans);
+  color: #fff;
+}
+.account-badge--google { background: #4285F4; }
+.account-badge--line { background: #06C755; }
+.account-badge--none { background: var(--yr-fg-subtle); }
+.account-logout {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%;
+  padding: 13px;
+  border: 0;
+  border-top: 1px solid var(--yr-border);
+  background: none;
+  color: var(--yr-error-700);
+  font: 600 14px/1 var(--yr-font-sans);
+  cursor: pointer;
+}
+.account-logout:active { background: rgba(0,0,0,0.03); }
+.account-hint {
+  margin: 8px 4px 0;
+  font: 500 11px/1.6 var(--yr-font-sans);
+  color: var(--yr-fg-subtle);
+  text-align: center;
+}
+
 /* ── Confirm dialog (replaces native confirm) ──────────────── */
 .confirm-back {
   position: fixed; inset: 0;

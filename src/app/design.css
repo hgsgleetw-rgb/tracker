@@ -798,7 +798,19 @@
   gap: 12px;
   padding: 14px 16px;
 }
-.account-id-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.account-id-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.account-logout-btn {
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 13px;
+  border: 1px solid var(--yr-border);
+  border-radius: 999px;
+  background: none;
+  color: var(--yr-error-700);
+  font: 600 13px/1 var(--yr-font-sans);
+  cursor: pointer;
+}
+.account-logout-btn:active { background: rgba(0,0,0,0.03); }
 .account-id-name {
   font: 700 16px/1.2 var(--yr-font-sans);
   color: var(--yr-fg);

@@ -22,14 +22,15 @@ export default function CreateGroup({ onCancel, onCreate, onCreateAndInvite }: C
     setMemberDraft("");
   };
 
+  // Group name is optional — fall back to a sensible default they can rename.
+  const finalName = () => name.trim() || "我的群組";
+
   const submit = () => {
-    if (!name.trim()) return;
-    onCreate({ name: name.trim(), usePool, memberNames: members });
+    onCreate({ name: finalName(), usePool, memberNames: members });
   };
 
   const submitAndInvite = () => {
-    if (!name.trim()) return;
-    onCreateAndInvite({ name: name.trim(), usePool, memberNames: members });
+    onCreateAndInvite({ name: finalName(), usePool, memberNames: members });
   };
 
   return (
@@ -43,7 +44,7 @@ export default function CreateGroup({ onCancel, onCreate, onCreateAndInvite }: C
           </p>
           <input
             className="input onb-input"
-            placeholder="群組名稱"
+            placeholder="群組名稱（可留空，預設「我的群組」）"
             autoFocus
             maxLength={30}
             value={name}
@@ -125,7 +126,6 @@ export default function CreateGroup({ onCancel, onCreate, onCreateAndInvite }: C
           <button
             className="btn btn--secondary btn--block"
             onClick={submitAndInvite}
-            disabled={!name.trim()}
           >
             <AppIcon name="users" size={16} /> 複製邀請連結傳給朋友
           </button>
@@ -142,11 +142,7 @@ export default function CreateGroup({ onCancel, onCreate, onCreateAndInvite }: C
             返回
           </button>
         )}
-        <button
-          className="btn btn--primary"
-          disabled={!name.trim()}
-          onClick={submit}
-        >
+        <button className="btn btn--primary" onClick={submit}>
           建立群組
         </button>
       </div>

@@ -819,18 +819,19 @@
 .account-badge--google { background: #4285F4; }
 .account-badge--line { background: #06C755; }
 .account-badge--none { background: var(--yr-fg-subtle); }
-.account-logout {
+.danger-row {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   width: 100%;
-  padding: 13px;
+  padding: 14px;
   border: 0;
-  border-top: 1px solid var(--yr-border);
   background: none;
   color: var(--yr-error-700);
   font: 600 14px/1 var(--yr-font-sans);
   cursor: pointer;
 }
-.account-logout:active { background: rgba(0,0,0,0.03); }
+.danger-row + .danger-row { border-top: 1px solid var(--yr-border); }
+.account-id + .danger-row { border-top: 1px solid var(--yr-border); }
+.danger-row:active { background: rgba(0,0,0,0.03); }
 .account-hint {
   margin: 8px 4px 0;
   font: 500 11px/1.6 var(--yr-font-sans);

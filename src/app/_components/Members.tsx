@@ -54,7 +54,6 @@ export default function Members({
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [showHandover, setShowHandover] = useState(false);
-  const [showLeaveInfo, setShowLeaveInfo] = useState(false);
   // Members (real accounts, not me) who could take over as admin.
   const successors = team.filter((m) => m.isUser && !m.isMe && !m.isAdmin);
 
@@ -247,76 +246,6 @@ export default function Members({
         )}
 
         <div className="sec-title">
-          <h3>邀請</h3>
-        </div>
-        <div className="card">
-          <button className="btn btn--primary btn--block" onClick={onInvite}>
-            <AppIcon name="users" size={16} /> 邀請朋友加入
-          </button>
-          <div
-            className="muted"
-            style={{ fontSize: 11, marginTop: 8, textAlign: "center" }}
-          >
-            複製連結後貼到 LINE 傳給朋友，對方點開申請、由你核准就能一起記帳
-          </div>
-        </div>
-
-        {isAdmin ? (
-          <>
-
-            <div className="sec-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <h3>群組</h3>
-              <button
-                onClick={() => setShowLeaveInfo((s) => !s)}
-                aria-label="說明"
-                style={{
-                  width: 18, height: 18, borderRadius: "50%",
-                  border: "1px solid var(--yr-border-strong)",
-                  background: "none", color: "var(--yr-fg-subtle)",
-                  fontSize: 11, lineHeight: 1, cursor: "pointer",
-                }}
-              >
-                i
-              </button>
-            </div>
-            <div className="card">
-              <button
-                className="btn btn--danger btn--block"
-                onClick={() => setShowHandover(true)}
-              >
-                <AppIcon name="back" size={16} /> 退出群組
-              </button>
-              {showLeaveInfo && (
-                <div
-                  className="muted"
-                  style={{ fontSize: 11, marginTop: 8, textAlign: "center", lineHeight: 1.6 }}
-                >
-                  你是管理員，退出前需先把管理員交給其他成員（會自動帶你選），
-                  或在群組切換頁刪除整個群組。
-                </div>
-              )}
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="sec-title">
-              <h3>群組</h3>
-            </div>
-            <div className="card">
-              <button className="btn btn--danger btn--block" onClick={onLeave}>
-                <AppIcon name="back" size={16} /> 退出群組
-              </button>
-              <div
-                className="muted"
-                style={{ fontSize: 11, marginTop: 8, textAlign: "center" }}
-              >
-                你將離開這個群組，紀錄會保留給其他成員
-              </div>
-            </div>
-          </>
-        )}
-
-        <div className="sec-title">
           <h3>帳號</h3>
         </div>
         <div className="account-box">
@@ -332,12 +261,43 @@ export default function Members({
               </div>
             </div>
           </div>
-          <button className="account-logout" onClick={onLogout}>
+        </div>
+
+        <div className="sec-title">
+          <h3>邀請</h3>
+        </div>
+        <div className="card">
+          <button className="btn btn--primary btn--block" onClick={onInvite}>
+            <AppIcon name="users" size={16} /> 邀請朋友加入
+          </button>
+          <div
+            className="muted"
+            style={{ fontSize: 11, marginTop: 8, textAlign: "center" }}
+          >
+            複製連結後貼到 LINE 傳給朋友，對方點開申請、由你核准就能一起記帳
+          </div>
+        </div>
+
+        <div className="sec-title">
+          <h3>離開</h3>
+        </div>
+        <div className="account-box">
+          <button
+            className="danger-row"
+            onClick={() => (isAdmin ? setShowHandover(true) : onLeave())}
+          >
+            <AppIcon name="back" size={15} /> 退出群組
+          </button>
+          <button className="danger-row" onClick={onLogout}>
             <AppIcon name="back" size={15} /> 登出
           </button>
         </div>
         <p className="account-hint">
-          登出後群組與紀錄都會保留，用同一個帳號重新登入即可看到
+          {isAdmin
+            ? "退出群組前需先把管理員交給其他成員（會自動帶你選）。"
+            : "退出群組後，你的紀錄會保留給其他成員。"}
+          <br />
+          登出後群組與紀錄都會保留，用同一個帳號重新登入即可看到。
         </p>
 
         <div style={{ height: 30 }} />

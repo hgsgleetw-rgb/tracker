@@ -60,6 +60,19 @@ function isJwtExpired(token: string): boolean {
   }
 }
 
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const m = document.cookie.match(
+    new RegExp("(?:^|; )" + name + "=([^;]*)")
+  );
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+function deleteCookie(name: string) {
+  if (typeof document === "undefined") return;
+  document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax`;
+}
+
 function profileFromJwt(token: string): LiffProfile {
   try {
     const p = decodeJwt(token);
@@ -111,6 +124,22 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
             return; // redirects
           }
           await useLineSession();
+          return;
+        }
+
+        // Returning from the Google redirect flow: the credential was handed
+        // back to us in a short-lived cookie. Sign in with it.
+        const gcred = readCookie("g_cred");
+        if (gcred) {
+          deleteCookie("g_cred");
+          try {
+            localStorage.setItem("auth-provider", "google");
+            localStorage.setItem("google-credential", gcred);
+          } catch {}
+          setProvider("google");
+          setTokenGetter(() => `google:${gcred}`);
+          setProfile(profileFromJwt(gcred));
+          setIsReady(true);
           return;
         }
 

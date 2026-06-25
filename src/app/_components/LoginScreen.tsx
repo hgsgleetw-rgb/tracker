@@ -27,11 +27,13 @@ export default function LoginScreen() {
         callback: (resp: { credential?: string }) => {
           if (resp.credential) onGoogleCredential(resp.credential);
         },
-        auto_select: true,
-        // Use the browser's native FedCM sign-in — far more reliable on
-        // mobile, where the old iframe flow can hang on accounts.google.com.
-        use_fedcm_for_prompt: true,
+        auto_select: false,
         itp_support: true,
+        // Redirect (not popup) so mobile doesn't hang on gsi/transform —
+        // Google posts the credential to our server route, which bounces it
+        // back to the app.
+        ux_mode: "redirect",
+        login_uri: `${window.location.origin}/api/auth/google`,
       });
       g.accounts.id.renderButton(googleDiv.current, {
         theme: "outline",
@@ -41,8 +43,6 @@ export default function LoginScreen() {
         shape: "pill",
         locale: "zh_TW",
       });
-      // Returning users get auto-signed-in without a click.
-      g.accounts.id.prompt();
     };
 
     if (window.google?.accounts?.id) {

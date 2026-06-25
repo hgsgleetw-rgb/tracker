@@ -65,25 +65,27 @@ export default function LoginScreen() {
       <h1 className="login-title">記帳</h1>
       <p className="login-sub">選擇登入方式，開始和大家一起記帳</p>
 
-      <button className="login-btn" onClick={loginLine}>
-        <span className="login-btn-icon" aria-hidden>
-          <svg viewBox="0 0 24 24" width="20" height="20">
-            <rect width="24" height="24" rx="6" fill="#06C755" />
-            <path
-              d="M12 5.6c-3.9 0-7 2.5-7 5.6 0 2.8 2.5 5.1 5.9 5.5.2 0 .5.1.6.3.1.2 0 .5 0 .6l-.1.6c0 .2-.1.7.6.4.7-.3 3.9-2.3 5.3-3.9 1-1 1.5-2.1 1.5-3.5C20.3 8.1 17.2 5.6 12 5.6z"
-              fill="#fff"
-            />
-          </svg>
-        </span>
-        <span className="login-btn-label">用 LINE 登入</span>
-      </button>
+      <div className="login-actions">
+        <button className="login-btn" onClick={loginLine}>
+          <span className="login-btn-icon" aria-hidden>
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <rect width="24" height="24" rx="6" fill="#06C755" />
+              <path
+                d="M12 5.6c-3.9 0-7 2.5-7 5.6 0 2.8 2.5 5.1 5.9 5.5.2 0 .5.1.6.3.1.2 0 .5 0 .6l-.1.6c0 .2-.1.7.6.4.7-.3 3.9-2.3 5.3-3.9 1-1 1.5-2.1 1.5-3.5C20.3 8.1 17.2 5.6 12 5.6z"
+                fill="#fff"
+              />
+            </svg>
+          </span>
+          <span className="login-btn-label">用 LINE 登入</span>
+        </button>
 
-      {googleClientId ? (
-        <>
-          <div className="login-or">或</div>
-          <div ref={googleDiv} className="login-google" />
-        </>
-      ) : null}
+        {googleClientId ? (
+          <>
+            <div className="login-or">或</div>
+            <div ref={googleDiv} className="login-google" />
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }

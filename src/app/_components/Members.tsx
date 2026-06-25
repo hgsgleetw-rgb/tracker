@@ -260,8 +260,14 @@ export default function Members({
                 {providerLabel}
               </div>
             </div>
+            <button className="account-logout-btn" onClick={onLogout}>
+              <AppIcon name="back" size={14} /> 登出
+            </button>
           </div>
         </div>
+        <p className="account-hint">
+          登出後群組與紀錄都會保留，用同一個帳號重新登入即可看到
+        </p>
 
         <div className="sec-title">
           <h3>邀請</h3>
@@ -279,7 +285,7 @@ export default function Members({
         </div>
 
         <div className="sec-title">
-          <h3>離開</h3>
+          <h3>群組</h3>
         </div>
         <div className="account-box">
           <button
@@ -288,16 +294,11 @@ export default function Members({
           >
             <AppIcon name="back" size={15} /> 退出群組
           </button>
-          <button className="danger-row" onClick={onLogout}>
-            <AppIcon name="back" size={15} /> 登出
-          </button>
         </div>
         <p className="account-hint">
           {isAdmin
             ? "退出群組前需先把管理員交給其他成員（會自動帶你選）。"
             : "退出群組後，你的紀錄會保留給其他成員。"}
-          <br />
-          登出後群組與紀錄都會保留，用同一個帳號重新登入即可看到。
         </p>
 
         <div style={{ height: 30 }} />

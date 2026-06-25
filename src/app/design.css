@@ -844,6 +844,34 @@
 .danger-row + .danger-row { border-top: 1px solid var(--yr-border); }
 .account-id + .danger-row { border-top: 1px solid var(--yr-border); }
 .danger-row:active { background: rgba(0,0,0,0.03); }
+
+/* Hold-to-leave: grey by default, turns red while filling the bar */
+.hold-leave {
+  position: relative;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%;
+  padding: 15px;
+  border: 0;
+  background: none;
+  color: var(--yr-fg-subtle);
+  font: 600 14px/1 var(--yr-font-sans);
+  cursor: pointer;
+  user-select: none; -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.12s ease;
+}
+.hold-leave.is-holding { color: var(--yr-error-700); }
+.hold-leave-label {
+  position: relative; z-index: 1;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.hold-leave-fill {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  z-index: 0;
+  background: var(--yr-error-100);
+  border-radius: 0 8px 8px 0;
+}
 .account-hint {
   margin: 8px 4px 0;
   font: 500 11px/1.6 var(--yr-font-sans);

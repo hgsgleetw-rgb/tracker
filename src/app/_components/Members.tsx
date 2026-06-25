@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Member, Expense, JoinRequestInfo, fmt, fmtSigned } from "./data";
 import { Avatar } from "./Shared";
 import AppIcon from "./Icons";
@@ -44,6 +44,40 @@ export default function Members({
   onLogout,
   provider,
 }: MembersProps) {
+  // Hold-to-leave: press and hold until the bar fills to confirm leaving.
+  const HOLD_MS = 1100;
+  const [holding, setHolding] = useState(false);
+  const [holdProgress, setHoldProgress] = useState(0);
+  const rafRef = useRef<number | null>(null);
+
+  const stopHold = (reset = true) => {
+    if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    setHolding(false);
+    if (reset) setHoldProgress(0);
+  };
+
+  const startHold = () => {
+    if (rafRef.current != null) return;
+    setHolding(true);
+    let start = 0;
+    const tick = (now: number) => {
+      if (!start) start = now;
+      const p = Math.min(1, (now - start) / HOLD_MS);
+      setHoldProgress(p);
+      if (p >= 1) {
+        stopHold();
+        if (isAdmin) setShowHandover(true);
+        else onLeave();
+        return;
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  };
+
+  useEffect(() => () => stopHold(), []);
+
   const me = team.find((m) => m.isMe);
   const providerLabel =
     provider === "google"
@@ -289,16 +323,28 @@ export default function Members({
         </div>
         <div className="account-box">
           <button
-            className="danger-row"
-            onClick={() => (isAdmin ? setShowHandover(true) : onLeave())}
+            className={`hold-leave ${holding ? "is-holding" : ""}`}
+            onPointerDown={startHold}
+            onPointerUp={() => stopHold()}
+            onPointerLeave={() => stopHold()}
+            onPointerCancel={() => stopHold()}
+            onContextMenu={(e) => e.preventDefault()}
+            style={{ touchAction: "none" }}
           >
-            <AppIcon name="back" size={15} /> 退出群組
+            <span
+              className="hold-leave-fill"
+              style={{ width: `${holdProgress * 100}%` }}
+            />
+            <span className="hold-leave-label">
+              <AppIcon name="back" size={15} />
+              {holding ? "持續按住直到滿…" : "長按以退出群組"}
+            </span>
           </button>
         </div>
         <p className="account-hint">
           {isAdmin
-            ? "退出群組前需先把管理員交給其他成員（會自動帶你選）。"
-            : "退出群組後，你的紀錄會保留給其他成員。"}
+            ? "長按下方按鈕，需先把管理員交給其他成員（會自動帶你選）。"
+            : "長按下方按鈕即可退出，你的紀錄會保留給其他成員。"}
         </p>
 
         <div style={{ height: 30 }} />

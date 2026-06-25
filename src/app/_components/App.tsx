@@ -496,11 +496,12 @@ export default function App() {
     pushToast({ title: "已轉移管理員", desc: m?.zh });
   };
 
-  const leaveGroup = async () => {
+  const leaveGroup = async (skipConfirm = false) => {
     const gid = state.activeGroupId;
     if (!gid) return;
     const gname = activeGroup?.name ?? "這個群組";
     if (
+      !skipConfirm &&
       !(await confirmAsync(
         `確定要退出「${gname}」？\n你的名字與紀錄會保留給其他成員，但你將無法再看到這個群組。`
       ))
@@ -735,7 +736,7 @@ export default function App() {
           onInvite={inviteToGroup}
           onApprove={approveRequest}
           onReject={rejectRequest}
-          onLeave={leaveGroup}
+          onLeave={() => leaveGroup(true)}
           onHandoverLeave={handoverAndLeave}
           onTransferAdmin={transferAdmin}
           onUploadAvatar={uploadAvatar}

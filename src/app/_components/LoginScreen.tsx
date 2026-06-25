@@ -28,6 +28,10 @@ export default function LoginScreen() {
           if (resp.credential) onGoogleCredential(resp.credential);
         },
         auto_select: true,
+        // Use the browser's native FedCM sign-in — far more reliable on
+        // mobile, where the old iframe flow can hang on accounts.google.com.
+        use_fedcm_for_prompt: true,
+        itp_support: true,
       });
       g.accounts.id.renderButton(googleDiv.current, {
         theme: "outline",

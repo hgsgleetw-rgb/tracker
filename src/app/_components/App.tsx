@@ -81,6 +81,7 @@ export default function App() {
   const [showCreate, setShowCreate] = useState(false);
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [joinCode, setJoinCode] = useState<string | null>(null);
+  const [loadErr, setLoadErr] = useState<string>("");
   const [confirmReq, setConfirmReq] = useState<{
     message: string;
     resolve: (ok: boolean) => void;
@@ -144,7 +145,10 @@ export default function App() {
         }
       } catch (e) {
         console.error("[getState]", e);
-        if (!cancelled) setPhase("error");
+        if (!cancelled) {
+          setLoadErr(e instanceof Error ? e.message : String(e));
+          setPhase("error");
+        }
       }
     })();
     return () => {
@@ -539,6 +543,19 @@ export default function App() {
         <p style={{ color: "var(--yr-fg-subtle)", fontSize: 14, textAlign: "center" }}>
           {liffError ? "LINE 登入失敗" : "載入資料失敗"}，請重新整理再試一次。
         </p>
+        {(liffError || loadErr) && (
+          <p
+            style={{
+              color: "var(--yr-fg-disabled)",
+              fontSize: 11,
+              textAlign: "center",
+              maxWidth: 320,
+              wordBreak: "break-all",
+            }}
+          >
+            {liffError || loadErr}
+          </p>
+        )}
         <button
           onClick={() => location.reload()}
           style={{

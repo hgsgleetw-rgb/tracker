@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
-// Tiny diagnostic: is NEXT_PUBLIC_GOOGLE_CLIENT_ID present in this deployment?
-// Returns only presence + length (never the value).
+// Diagnostic: is NEXT_PUBLIC_GOOGLE_CLIENT_ID present? (presence + length only)
 export async function GET() {
   const id = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
   return NextResponse.json({

@@ -20,6 +20,7 @@ type LiffContextType = {
   lastGoogle: LiffProfile | null; // last Google account used on this device
   loginLine: () => void;
   onGoogleCredential: (credential: string) => void;
+  logout: () => void;
 };
 
 const LiffContext = createContext<LiffContextType>({
@@ -32,6 +33,7 @@ const LiffContext = createContext<LiffContextType>({
   lastGoogle: null,
   loginLine: () => {},
   onGoogleCredential: () => {},
+  logout: () => {},
 });
 
 // Decode a JWT payload (base64url, unicode-safe).
@@ -148,6 +150,22 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
     liff?.login();
   };
 
+  const logout = () => {
+    try {
+      localStorage.removeItem("auth-provider");
+      localStorage.removeItem("google-credential");
+    } catch {}
+    try {
+      // Disable Google auto sign-in so the chooser shows next time.
+      window.google?.accounts?.id?.disableAutoSelect?.();
+    } catch {}
+    try {
+      if (liff?.isLoggedIn()) liff.logout();
+    } catch {}
+    // Reload so the provider re-runs and lands on the login screen.
+    if (typeof window !== "undefined") window.location.reload();
+  };
+
   const onGoogleCredential = (credential: string) => {
     try {
       localStorage.setItem("auth-provider", "google");
@@ -171,6 +189,7 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
         lastGoogle,
         loginLine,
         onGoogleCredential,
+        logout,
       }}
     >
       {children}

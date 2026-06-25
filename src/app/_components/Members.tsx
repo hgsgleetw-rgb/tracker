@@ -22,6 +22,7 @@ interface MembersProps {
   onHandoverLeave: (memberId: string) => void;
   onTransferAdmin: (id: string) => void;
   onUploadAvatar: (file: File) => void;
+  onLogout: () => void;
 }
 
 export default function Members({
@@ -41,6 +42,7 @@ export default function Members({
   onHandoverLeave,
   onTransferAdmin,
   onUploadAvatar,
+  onLogout,
 }: MembersProps) {
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
@@ -323,6 +325,21 @@ export default function Members({
             </div>
           </>
         )}
+
+        <div className="sec-title">
+          <h3>帳號</h3>
+        </div>
+        <div className="card">
+          <button className="btn btn--secondary btn--block" onClick={onLogout}>
+            <AppIcon name="back" size={16} /> 登出
+          </button>
+          <div
+            className="muted"
+            style={{ fontSize: 11, marginTop: 8, textAlign: "center" }}
+          >
+            登出後會回到登入畫面，群組與紀錄都會保留，重新登入即可看到
+          </div>
+        </div>
 
         <div style={{ height: 30 }} />
         <div

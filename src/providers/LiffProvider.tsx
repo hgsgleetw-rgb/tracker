@@ -17,6 +17,7 @@ type LiffContextType = {
   error: string | null;
   needsLogin: boolean; // browser, waiting for the user to pick a provider
   googleClientId: string;
+  lastGoogle: LiffProfile | null; // last Google account used on this device
   loginLine: () => void;
   onGoogleCredential: (credential: string) => void;
 };
@@ -28,6 +29,7 @@ const LiffContext = createContext<LiffContextType>({
   error: null,
   needsLogin: false,
   googleClientId: "",
+  lastGoogle: null,
   loginLine: () => {},
   onGoogleCredential: () => {},
 });
@@ -73,6 +75,7 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsLogin, setNeedsLogin] = useState(false);
+  const [lastGoogle, setLastGoogle] = useState<LiffProfile | null>(null);
 
   // Inlined at build time from the Vercel env var (NEXT_PUBLIC_*).
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
@@ -114,15 +117,20 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
           await useLineSession();
           return;
         }
-        // Restore a previous Google session if the saved token is still valid
-        // (~1h) — skip the login screen entirely, no re-click needed.
+        // Restore a previous Google session.
         if (saved === "google") {
           const cred = localStorage.getItem("google-credential");
-          if (cred && !isJwtExpired(cred)) {
-            setTokenGetter(() => `google:${cred}`);
-            setProfile(profileFromJwt(cred));
-            setIsReady(true);
-            return;
+          if (cred) {
+            // Remember who they are so the login screen can greet them.
+            setLastGoogle(profileFromJwt(cred));
+            // If the token is still valid (~1h), skip the login screen
+            // entirely — no re-click needed.
+            if (!isJwtExpired(cred)) {
+              setTokenGetter(() => `google:${cred}`);
+              setProfile(profileFromJwt(cred));
+              setIsReady(true);
+              return;
+            }
           }
         }
         setNeedsLogin(true);
@@ -160,6 +168,7 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
         error,
         needsLogin,
         googleClientId,
+        lastGoogle,
         loginLine,
         onGoogleCredential,
       }}

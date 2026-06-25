@@ -18,6 +18,7 @@ type LiffContextType = {
   needsLogin: boolean; // browser, waiting for the user to pick a provider
   googleClientId: string;
   lastGoogle: LiffProfile | null; // last Google account used on this device
+  provider: "line" | "google" | null; // how the current session signed in
   loginLine: () => void;
   onGoogleCredential: (credential: string) => void;
   logout: () => void;
@@ -31,6 +32,7 @@ const LiffContext = createContext<LiffContextType>({
   needsLogin: false,
   googleClientId: "",
   lastGoogle: null,
+  provider: null,
   loginLine: () => {},
   onGoogleCredential: () => {},
   logout: () => {},
@@ -78,6 +80,7 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [needsLogin, setNeedsLogin] = useState(false);
   const [lastGoogle, setLastGoogle] = useState<LiffProfile | null>(null);
+  const [provider, setProvider] = useState<"line" | "google" | null>(null);
 
   // Inlined at build time from the Vercel env var (NEXT_PUBLIC_*).
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
@@ -91,6 +94,7 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
 
         const useLineSession = async () => {
           const p = await liffObj.getProfile();
+          setProvider("line");
           setTokenGetter(() => liffObj.getAccessToken());
           setProfile({
             userId: p.userId,
@@ -128,6 +132,7 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
             // If the token is still valid (~1h), skip the login screen
             // entirely — no re-click needed.
             if (!isJwtExpired(cred)) {
+              setProvider("google");
               setTokenGetter(() => `google:${cred}`);
               setProfile(profileFromJwt(cred));
               setIsReady(true);
@@ -171,6 +176,7 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem("auth-provider", "google");
       localStorage.setItem("google-credential", credential);
     } catch {}
+    setProvider("google");
     setTokenGetter(() => `google:${credential}`);
     setProfile(profileFromJwt(credential));
     setNeedsLogin(false);
@@ -187,6 +193,7 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
         needsLogin,
         googleClientId,
         lastGoogle,
+        provider,
         loginLine,
         onGoogleCredential,
         logout,

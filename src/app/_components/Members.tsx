@@ -22,6 +22,7 @@ interface MembersProps {
   onTransferAdmin: (id: string) => void;
   onUploadAvatar: (file: File) => void;
   onLogout: () => void;
+  provider: "line" | "google" | null;
 }
 
 export default function Members({
@@ -41,7 +42,15 @@ export default function Members({
   onTransferAdmin,
   onUploadAvatar,
   onLogout,
+  provider,
 }: MembersProps) {
+  const me = team.find((m) => m.isMe);
+  const providerLabel =
+    provider === "google"
+      ? "透過 Google 登入"
+      : provider === "line"
+      ? "透過 LINE 登入"
+      : "已登入";
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [showHandover, setShowHandover] = useState(false);
@@ -310,17 +319,26 @@ export default function Members({
         <div className="sec-title">
           <h3>帳號</h3>
         </div>
-        <div className="card">
-          <button className="btn btn--secondary btn--block" onClick={onLogout}>
-            <AppIcon name="back" size={16} /> 登出
-          </button>
-          <div
-            className="muted"
-            style={{ fontSize: 11, marginTop: 8, textAlign: "center" }}
-          >
-            登出後會回到登入畫面，群組與紀錄都會保留，重新登入即可看到
+        <div className="account-box">
+          <div className="account-id">
+            <Avatar member={me} size="lg" />
+            <div className="account-id-text">
+              <div className="account-id-name">{me?.zh || me?.name || "我"}</div>
+              <div className="account-id-sub">
+                <span className={`account-badge account-badge--${provider ?? "none"}`}>
+                  {provider === "google" ? "G" : provider === "line" ? "L" : "·"}
+                </span>
+                {providerLabel}
+              </div>
+            </div>
           </div>
+          <button className="account-logout" onClick={onLogout}>
+            <AppIcon name="back" size={15} /> 登出
+          </button>
         </div>
+        <p className="account-hint">
+          登出後群組與紀錄都會保留，用同一個帳號重新登入即可看到
+        </p>
 
         <div style={{ height: 30 }} />
         <div

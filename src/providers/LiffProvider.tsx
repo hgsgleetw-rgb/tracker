@@ -51,6 +51,7 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [needsLogin, setNeedsLogin] = useState(false);
 
+  // Inlined at build time from the Vercel env var (NEXT_PUBLIC_*).
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
 
   useEffect(() => {

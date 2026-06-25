@@ -32,6 +32,11 @@ export async function authenticate(request: Request): Promise<AuthResult> {
   const token = bearer(request);
   if (!token) return unauthorized("Missing access token");
 
+  // Google Sign-In: token is "google:<idToken>".
+  if (token.startsWith("google:")) {
+    return authenticateGoogle(token.slice("google:".length));
+  }
+
   try {
     // 1) Verify the token is valid AND belongs to our channel.
     const verifyRes = await fetch(
@@ -77,6 +82,44 @@ export async function authenticate(request: Request): Promise<AuthResult> {
     return { ok: true, user };
   } catch (e) {
     console.error("[auth]", e);
+    return { ok: false, response: NextResponse.json({ error: "Auth failed" }, { status: 500 }) };
+  }
+}
+
+// Verify a Google ID token and upsert the user (keyed by "google:<sub>").
+async function authenticateGoogle(idToken: string): Promise<AuthResult> {
+  try {
+    const res = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`
+    );
+    if (!res.ok) return unauthorized("Invalid Google token");
+    const info = (await res.json()) as {
+      sub?: string;
+      aud?: string;
+      exp?: string;
+      email?: string;
+      name?: string;
+      picture?: string;
+    };
+
+    const expectedAud = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!info.sub) return unauthorized("Google token missing subject");
+    if (expectedAud && info.aud !== expectedAud) {
+      return unauthorized("Google token for a different app");
+    }
+    if (info.exp && Number(info.exp) * 1000 < Date.now()) {
+      return unauthorized("Google token expired");
+    }
+
+    const name = info.name || info.email || "我";
+    const user = await prisma.user.upsert({
+      where: { lineUserId: `google:${info.sub}` },
+      update: { displayName: name, pictureUrl: info.picture ?? null },
+      create: { lineUserId: `google:${info.sub}`, displayName: name, pictureUrl: info.picture ?? null },
+    });
+    return { ok: true, user };
+  } catch (e) {
+    console.error("[auth google]", e);
     return { ok: false, response: NextResponse.json({ error: "Auth failed" }, { status: 500 }) };
   }
 }

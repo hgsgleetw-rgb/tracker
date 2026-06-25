@@ -29,6 +29,7 @@ import ExpenseDetail from "./ExpenseDetail";
 import Onboarding from "./Onboarding";
 import CreateGroup from "./CreateGroup";
 import JoinGroup from "./JoinGroup";
+import LoginScreen from "./LoginScreen";
 import GroupSwitcher from "./GroupSwitcher";
 import TutorialOverlay from "./TutorialOverlay";
 import AppIcon from "./Icons";
@@ -70,7 +71,7 @@ function resizeImage(file: File, max = 256): Promise<string> {
 }
 
 export default function App() {
-  const { liff, isReady, error: liffError, profile } = useLiff();
+  const { liff, isReady, error: liffError, profile, needsLogin } = useLiff();
 
   const [state, setState] = useState<AppState>(() => defaultState());
   const [phase, setPhase] = useState<LoadPhase>("loading");
@@ -510,6 +511,15 @@ export default function App() {
     setRoute({ name: "tab" });
     pushToast({ title: "已交棒並退出", desc: m?.zh });
   };
+
+  // ── Login choice (browser, not yet authenticated) ──────────
+  if (needsLogin) {
+    return (
+      <div className="app">
+        <LoginScreen />
+      </div>
+    );
+  }
 
   // ── Loading / error gates ───────────────────────────────────
   if (!isReady || phase === "loading") {

@@ -6,9 +6,10 @@ import AppIcon from "./Icons";
 interface CreateGroupProps {
   onCancel?: (() => void) | null;
   onCreate: (opts: { name: string; usePool: boolean; memberNames: string[] }) => void;
+  onCreateAndInvite: (opts: { name: string; usePool: boolean; memberNames: string[] }) => void;
 }
 
-export default function CreateGroup({ onCancel, onCreate }: CreateGroupProps) {
+export default function CreateGroup({ onCancel, onCreate, onCreateAndInvite }: CreateGroupProps) {
   const [name, setName] = useState("");
   const [usePool, setUsePool] = useState(false);
   const [members, setMembers] = useState<string[]>([]);
@@ -24,6 +25,11 @@ export default function CreateGroup({ onCancel, onCreate }: CreateGroupProps) {
   const submit = () => {
     if (!name.trim()) return;
     onCreate({ name: name.trim(), usePool, memberNames: members });
+  };
+
+  const submitAndInvite = () => {
+    if (!name.trim()) return;
+    onCreateAndInvite({ name: name.trim(), usePool, memberNames: members });
   };
 
   return (
@@ -114,6 +120,19 @@ export default function CreateGroup({ onCancel, onCreate }: CreateGroupProps) {
               ))}
             </div>
           )}
+
+          <div className="onb-or-line"><span>或</span></div>
+          <button
+            className="btn btn--secondary btn--block"
+            onClick={submitAndInvite}
+            disabled={!name.trim()}
+          >
+            <AppIcon name="users" size={16} /> 複製邀請連結傳給朋友
+          </button>
+          <p className="onb-p" style={{ marginTop: 8, fontSize: 12 }}>
+            會先建立群組，並把邀請連結複製起來。貼到 LINE 傳給會用
+            App 的朋友，他們點開申請、你核准就能一起記帳。
+          </p>
         </div>
       </div>
 

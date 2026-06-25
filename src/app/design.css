@@ -1468,6 +1468,16 @@ textarea.input { height: auto; min-height: 80px; padding: 12px 14px; line-height
   display: flex; flex-wrap: wrap; gap: 8px;
   margin-top: 10px;
 }
+.onb-or-line {
+  display: flex; align-items: center; gap: 10px;
+  margin: 16px 0 12px;
+  color: var(--yr-fg-subtle);
+  font: 500 12px/1 var(--yr-font-sans);
+}
+.onb-or-line::before, .onb-or-line::after {
+  content: ""; flex: 1; height: 1px;
+  background: var(--yr-border);
+}
 .onb-chip {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 6px 10px;

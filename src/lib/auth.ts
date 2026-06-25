@@ -120,6 +120,10 @@ async function authenticateGoogle(idToken: string): Promise<AuthResult> {
     return { ok: true, user };
   } catch (e) {
     console.error("[auth google]", e);
-    return { ok: false, response: NextResponse.json({ error: "Auth failed" }, { status: 500 }) };
+    const detail = e instanceof Error ? e.message : String(e);
+    return {
+      ok: false,
+      response: NextResponse.json({ error: `Auth failed: ${detail}` }, { status: 500 }),
+    };
   }
 }

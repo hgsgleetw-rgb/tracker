@@ -700,6 +700,49 @@
   z-index: 25;
 }
 
+/* ── Login screen (provider choice) ────────────────────────── */
+.login {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+}
+.login-mark {
+  width: 72px; height: 72px;
+  border-radius: 20px;
+  background: var(--yr-gradient-primary);
+  display: grid; place-items: center;
+  box-shadow: 0 8px 20px rgba(62,118,185,0.35);
+  margin-bottom: 8px;
+}
+.login-title { font: 700 24px/1.2 var(--yr-font-sans); color: var(--yr-fg); }
+.login-sub {
+  font: 500 14px/1.5 var(--yr-font-sans);
+  color: var(--yr-fg-muted);
+  margin-bottom: 18px;
+}
+.login-line {
+  width: 260px;
+  height: 48px;
+  border: 0;
+  border-radius: 999px;
+  background: #06C755; /* LINE green */
+  color: #fff;
+  font: 700 15px/1 var(--yr-font-sans);
+  cursor: pointer;
+}
+.login-line:active { filter: brightness(0.95); }
+.login-or {
+  font: 500 12px/1 var(--yr-font-sans);
+  color: var(--yr-fg-subtle);
+  margin: 12px 0;
+}
+.login-google { min-height: 44px; display: flex; justify-content: center; }
+
 /* ── Confirm dialog (replaces native confirm) ──────────────── */
 .confirm-back {
   position: fixed; inset: 0;

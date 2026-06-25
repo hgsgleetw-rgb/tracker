@@ -725,21 +725,27 @@
   color: var(--yr-fg-muted);
   margin-bottom: 18px;
 }
-.login-line {
-  width: 260px;
-  height: 48px;
-  border: 0;
+/* Sibling auth buttons — white pills with a brand icon, equal weight */
+.login-btn {
+  width: 280px;
+  min-height: 44px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 11px 16px;
+  border: 1px solid #dadce0;
   border-radius: 999px;
-  background: #06C755; /* LINE green */
-  color: #fff;
-  font: 700 15px/1 var(--yr-font-sans);
+  background: #fff;
+  color: #3c4043;
+  font: 600 15px/1 var(--yr-font-sans);
   cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  -webkit-tap-highlight-color: transparent;
 }
-.login-line:active { filter: brightness(0.95); }
+.login-btn:active { background: #f7f8f8; }
+.login-btn-icon { display: inline-flex; align-items: center; }
 .login-or {
   font: 500 12px/1 var(--yr-font-sans);
   color: var(--yr-fg-subtle);
-  margin: 12px 0;
+  margin: 10px 0;
 }
 .login-google { min-height: 44px; display: flex; justify-content: center; }
 

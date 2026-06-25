@@ -14,7 +14,6 @@ interface MembersProps {
   onBack: () => void;
   onAdd: (name: string) => void;
   onRemove: (id: string) => void;
-  onClearData: () => void;
   onInvite: () => void;
   onApprove: (reqId: string) => void;
   onReject: (reqId: string) => void;
@@ -34,7 +33,6 @@ export default function Members({
   onBack,
   onAdd,
   onRemove,
-  onClearData,
   onInvite,
   onApprove,
   onReject,
@@ -256,23 +254,6 @@ export default function Members({
 
         {isAdmin ? (
           <>
-            <div className="sec-title">
-              <h3>資料</h3>
-            </div>
-            <div className="card">
-              <button
-                className="btn btn--danger btn--block"
-                onClick={onClearData}
-              >
-                <AppIcon name="trash" size={16} /> 清除所有紀錄
-              </button>
-              <div
-                className="muted"
-                style={{ fontSize: 11, marginTop: 8, textAlign: "center" }}
-              >
-                將清除所有支出與儲值資料（無法復原）
-              </div>
-            </div>
 
             <div className="sec-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <h3>群組</h3>

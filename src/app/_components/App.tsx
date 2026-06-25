@@ -386,14 +386,6 @@ export default function App() {
     pushToast({ title: "已移除", desc: member?.zh });
   };
 
-  const clearAllData = async () => {
-    if (!(await confirmAsync("確定要清除這個群組的所有紀錄？"))) return;
-    const gid = state.activeGroupId;
-    updateActiveGroup(() => ({ expenses: [], pool: 0 }));
-    if (gid) sync(api.groupAction(gid, "clear"));
-    pushToast({ title: "已清除所有紀錄" });
-  };
-
   const markAllPaid = async () => {
     if (!(await confirmAsync("將所有支出歸零？這會清除歷史，但保留成員與池子餘額。")))
       return;
@@ -740,7 +732,6 @@ export default function App() {
           onBack={() => setTab("home")}
           onAdd={addMember}
           onRemove={removeMember}
-          onClearData={clearAllData}
           onInvite={inviteToGroup}
           onApprove={approveRequest}
           onReject={rejectRequest}

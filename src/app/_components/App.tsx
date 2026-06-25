@@ -71,7 +71,7 @@ function resizeImage(file: File, max = 256): Promise<string> {
 }
 
 export default function App() {
-  const { liff, isReady, error: liffError, profile, needsLogin } = useLiff();
+  const { liff, isReady, error: liffError, profile, needsLogin, logout } = useLiff();
 
   const [state, setState] = useState<AppState>(() => defaultState());
   const [phase, setPhase] = useState<LoadPhase>("loading");
@@ -442,6 +442,16 @@ export default function App() {
     }
   };
 
+  const logoutAccount = async () => {
+    if (
+      !(await confirmAsync(
+        "登出後會回到登入畫面，需要重新登入才能看到你的群組。確定要登出嗎？"
+      ))
+    )
+      return;
+    logout();
+  };
+
   const handleJoined = async (groupId: string) => {
     setJoinCode(null);
     clearJoinFromUrl();
@@ -738,6 +748,7 @@ export default function App() {
           onHandoverLeave={handoverAndLeave}
           onTransferAdmin={transferAdmin}
           onUploadAvatar={uploadAvatar}
+          onLogout={logoutAccount}
         />
       );
     }

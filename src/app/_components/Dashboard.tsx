@@ -24,7 +24,6 @@ interface DashboardProps {
   groupName: string;
   usePool: boolean;
   isAdmin: boolean;
-  onTab: (tab: string) => void;
   onAdd: () => void;
   onTopUp: () => void;
   onOpenExpense: (e: Expense) => void;
@@ -44,7 +43,6 @@ export default function Dashboard({
   groupName,
   usePool,
   isAdmin,
-  onTab,
   onAdd,
   onTopUp,
   onOpenExpense,
@@ -200,8 +198,7 @@ export default function Dashboard({
                     (e) => e.at >= todayStart.getTime()
                   ).length;
                   if (todayCount > 0) return `今天有 ${todayCount} 筆新支出`;
-                  if (needSettle > 0) return `${needSettle} 筆待結算`;
-                  return `${team.length} 人 · 目前無待結算`;
+                  return `${team.length} 人一起記帳`;
                 })()}
               </div>
             </div>
@@ -234,17 +231,16 @@ export default function Dashboard({
 
         {usePool && heroView === "fund" ? (
           <>
-            <div
-              className="hero-balance"
-              onClick={onTopUp}
-              style={{ cursor: "pointer" }}
-            >
+            <div className="hero-balance">
               <div className="hero-bal-lbl">目前基金</div>
               <div className="hero-bal-amt">
                 <span className="cur">NT$</span>
                 {pool < 0 ? `−${fmt(Math.abs(pool))}` : fmt(pool)}
               </div>
             </div>
+            <button className="hero-topup" onClick={onTopUp}>
+              <AppIcon name="wallet" size={16} /> 為公基金儲值
+            </button>
             <div className="hero-progress">
               <div className="hero-prog-row">
                 <span>本月用掉基金</span>
@@ -253,10 +249,14 @@ export default function Dashboard({
               <div className="hero-bar">
                 <span style={{ width: `${progressWidth}%` }} />
               </div>
-              <div className="hero-prog-row sub">
-                <span>{netText}</span>
-                <span>待結算 {needSettle} 筆</span>
-              </div>
+            </div>
+            <div className="hero-foot">
+              <span className="hero-net">{netText}</span>
+              {needSettle > 0 && (
+                <button className="hero-pill" onClick={openSettlement}>
+                  待結算 {needSettle} 筆 →
+                </button>
+              )}
             </div>
           </>
         ) : (
@@ -283,44 +283,20 @@ export default function Dashboard({
                 <span>我的本月花費</span>
                 <span className="v">NT${fmt(monthTotal)}</span>
               </div>
-              <div className="hero-prog-row sub" style={{ marginTop: 8 }}>
-                <span>
-                  {needSettle > 0 ? `${needSettle} 筆待結算` : "目前無待結算"}
+            </div>
+            <div className="hero-foot">
+              {needSettle > 0 ? (
+                <button className="hero-pill" onClick={openSettlement}>
+                  待結算 {needSettle} 筆 →
+                </button>
+              ) : (
+                <span className="hero-net" style={{ opacity: 0.85 }}>
+                  目前無待結算
                 </span>
-                <span />
-              </div>
+              )}
             </div>
           </>
         )}
-
-        <div className="hero-quick">
-          {usePool && (
-            <button className="qa" onClick={onTopUp}>
-              <div className="qa-ico">
-                <AppIcon name="plus" size={20} strokeWidth={2.2} />
-              </div>
-              <span>儲值</span>
-            </button>
-          )}
-          <button className="qa" onClick={openHistory}>
-            <div className="qa-ico">
-              <AppIcon name="clock" size={20} />
-            </div>
-            <span>紀錄</span>
-          </button>
-          <button className="qa" onClick={openSettlement}>
-            <div className="qa-ico">
-              <AppIcon name="scale" size={20} />
-            </div>
-            <span>結算</span>
-          </button>
-          <button className="qa" onClick={() => onTab("settings")}>
-            <div className="qa-ico">
-              <AppIcon name="users" size={20} />
-            </div>
-            <span>成員</span>
-          </button>
-        </div>
       </div>
 
       {/* ── Main content ──────────────────────────────────── */}

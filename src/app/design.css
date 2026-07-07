@@ -385,6 +385,61 @@
   font: 500 11px/1 var(--yr-font-sans);
   color: rgba(255,255,255,0.85);
 }
+/* Dedicated top-up pill (money-movement action, set apart from browsing) */
+.hero-topup {
+  margin-top: 14px;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px;
+  border: 0; border-radius: 999px;
+  background: #fff;
+  color: var(--yr-brand-600);
+  font: 700 13px/1 var(--yr-font-sans);
+  cursor: pointer;
+  position: relative; z-index: 1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.hero-topup:active { filter: brightness(0.96); }
+/* Foot row: net balance (always visible) + a single 待結算 pill */
+.hero-foot {
+  margin-top: 18px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  position: relative; z-index: 1;
+}
+.hero-net {
+  font: 600 13px/1.4 var(--yr-font-sans);
+  color: #fff;
+}
+.hero-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 8px 13px;
+  border: 0; border-radius: 999px;
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  font: 600 12px/1 var(--yr-font-sans);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.hero-pill:active { background: rgba(255,255,255,0.3); }
+
+/* Settlement breakdown: reconciliation total */
+.settle-recon {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--yr-border);
+}
+.settle-recon-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font: 700 14px/1 var(--yr-font-sans);
+  color: var(--yr-fg);
+}
+.settle-recon-row .v { font-variant-numeric: tabular-nums; }
+.settle-recon-note {
+  margin-top: 8px;
+  font: 500 11px/1.6 var(--yr-font-sans);
+  color: var(--yr-fg-muted);
+}
+.settle-recon-note.ok { color: var(--yr-success-700); font-weight: 600; }
+
 .main--hero {
   background: var(--yr-gray-50);
   border-top-left-radius: 20px;

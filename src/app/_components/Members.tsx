@@ -23,6 +23,8 @@ interface MembersProps {
   onUploadAvatar: (file: File) => void;
   onLogout: () => void;
   provider: "line" | "google" | null;
+  usePool: boolean;
+  onSetUsePool: (on: boolean) => void;
 }
 
 export default function Members({
@@ -43,6 +45,8 @@ export default function Members({
   onUploadAvatar,
   onLogout,
   provider,
+  usePool,
+  onSetUsePool,
 }: MembersProps) {
   // Hold-to-leave: press and hold until the bar fills to confirm leaving.
   const HOLD_MS = 1100;
@@ -317,6 +321,36 @@ export default function Members({
             複製連結後貼到 LINE 傳給朋友，對方點開申請、由你核准就能一起記帳
           </div>
         </div>
+
+        {isAdmin && (
+          <>
+            <div className="sec-title">
+              <h3>群組設定</h3>
+            </div>
+            <div className="card">
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>公基金</div>
+                  <div
+                    className="muted"
+                    style={{ fontSize: 11, marginTop: 3, lineHeight: 1.5 }}
+                  >
+                    開啟後可先儲值一筆共用錢包，消費時從基金扣款；關閉則為純分帳。餘額會保留。
+                  </div>
+                </div>
+                <button
+                  className={`switch ${usePool ? "on" : ""}`}
+                  onClick={() => onSetUsePool(!usePool)}
+                  role="switch"
+                  aria-checked={usePool}
+                  aria-label="切換公基金"
+                >
+                  <span className="switch-knob" />
+                </button>
+              </div>
+            </div>
+          </>
+        )}
 
         <div className="sec-title">
           <h3>群組</h3>

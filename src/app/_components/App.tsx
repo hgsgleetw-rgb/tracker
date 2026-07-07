@@ -310,6 +310,22 @@ export default function App() {
     if (state.activeGroupId) renameGroupById(state.activeGroupId, name);
   };
 
+  const setUsePool = async (on: boolean) => {
+    const gid = state.activeGroupId;
+    if (!gid) return;
+    if (
+      !(await confirmAsync(
+        on
+          ? "要為這個群組啟用公基金嗎？啟用後可以先儲值一筆共用錢包，消費時從基金扣款。"
+          : "要關閉公基金嗎？基金餘額會先保留，重新啟用就會回來；期間改為純分帳。"
+      ))
+    )
+      return;
+    updateActiveGroup(() => ({ usePool: on }));
+    sync(api.setUsePool(gid, on));
+    pushToast({ title: on ? "已啟用公基金" : "已關閉公基金" });
+  };
+
   const deleteGroup = async (id: string) => {
     if (state.groups.length <= 1) {
       pushToast({ title: "無法刪除", desc: "至少要保留一個群組" });
@@ -728,6 +744,8 @@ export default function App() {
           balances={balances}
           expenses={expenses}
           isAdmin={activeGroup?.isAdmin ?? false}
+          usePool={activeGroup?.usePool ?? false}
+          onSetUsePool={setUsePool}
           pendingRequests={activeGroup?.pendingRequests ?? []}
           onBack={() => setTab("home")}
           onAdd={addMember}

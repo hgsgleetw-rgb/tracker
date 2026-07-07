@@ -421,6 +421,26 @@
 }
 .hero-pill:active { background: rgba(255,255,255,0.3); }
 
+/* Toggle switch (group settings) */
+.switch {
+  width: 46px; height: 28px;
+  flex-shrink: 0;
+  border: 0; border-radius: 999px;
+  background: var(--yr-gray-300);
+  position: relative; cursor: pointer;
+  transition: background 0.15s ease;
+}
+.switch.on { background: var(--yr-brand-400); }
+.switch-knob {
+  position: absolute; top: 3px; left: 3px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  transition: transform 0.15s ease;
+}
+.switch.on .switch-knob { transform: translateX(18px); }
+
 /* Settlement breakdown: reconciliation total */
 .settle-recon {
   margin-top: 12px;

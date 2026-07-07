@@ -64,6 +64,12 @@ export const api = {
       body: { action: "rename", name },
     }),
 
+  setUsePool: (groupId: string, usePool: boolean) =>
+    call(`/api/groups/${encodeURIComponent(groupId)}`, {
+      method: "PATCH",
+      body: { action: "setUsePool", usePool },
+    }),
+
   saveExpense: (groupId: string, expense: Expense) =>
     call(`/api/groups/${encodeURIComponent(groupId)}/expenses`, {
       method: "POST",

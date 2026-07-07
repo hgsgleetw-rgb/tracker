@@ -46,7 +46,12 @@ export async function PATCH(
   if (!auth.ok) return auth.response;
   const { id } = await params;
   try {
-    const body = (await request.json()) as { action: string; amount?: number; name?: string };
+    const body = (await request.json()) as {
+      action: string;
+      amount?: number;
+      name?: string;
+      usePool?: boolean;
+    };
     const group = await prisma.group.findUnique({
       where: { userId_clientId: { userId: auth.user.id, clientId: id } },
       select: { id: true },
@@ -70,6 +75,13 @@ export async function PATCH(
       await prisma.group.update({ where: { id: group.id }, data: { pool: 0 } });
     } else if (body.action === "markPaid") {
       await prisma.expense.deleteMany({ where: { groupId: group.id } });
+    } else if (body.action === "setUsePool") {
+      // Toggle the shared-fund mode. Pool balance is kept as-is, so turning
+      // it back on restores the fund.
+      await prisma.group.update({
+        where: { id: group.id },
+        data: { usePool: !!body.usePool },
+      });
     } else {
       return NextResponse.json({ error: "Unknown action" }, { status: 400 });
     }

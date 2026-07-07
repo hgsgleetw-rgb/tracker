@@ -20,6 +20,10 @@ export default function SettleBreakdown({
   const from = team.find((m) => m.id === transfer.from);
   const to = team.find((m) => m.id === transfer.to);
   const items = settleBreakdown(expenses, transfer.from, transfer.to);
+  // Sum of the two people's direct expenses. May differ from the suggested
+  // transfer, which nets across the whole group (greedy min-transactions).
+  const directNet = items.reduce((a, { signed }) => a + signed, 0);
+  const matchesSuggestion = Math.abs(directNet) === transfer.amount;
 
   return (
     <>
@@ -43,8 +47,14 @@ export default function SettleBreakdown({
           這筆款項的來源明細
         </div>
         {items.length === 0 ? (
-          <div className="muted" style={{ textAlign: "center", padding: "16px 0" }}>
-            沒有兩人之間的個人支出明細
+          <div
+            className="muted"
+            style={{ textAlign: "center", padding: "12px 6px 4px", lineHeight: 1.7 }}
+          >
+            你和 {to?.zh} 之間沒有直接的個人支出。
+            <br />
+            建議轉的 NT${fmt(transfer.amount)} 是系統為了讓大家用最少筆數還清、
+            跨成員互相抵銷後的結果。
           </div>
         ) : (
           <div className="list">
@@ -100,6 +110,23 @@ export default function SettleBreakdown({
                 </div>
               );
             })}
+          </div>
+        )}
+        {items.length > 0 && (
+          <div className="settle-recon">
+            <div className="settle-recon-row">
+              <span>你們之間明細合計</span>
+              <span className="v">NT${fmt(Math.abs(directNet))}</span>
+            </div>
+            {matchesSuggestion ? (
+              <div className="settle-recon-note ok">
+                = 建議轉 NT${fmt(transfer.amount)} · 與明細相符 ✓
+              </div>
+            ) : (
+              <div className="settle-recon-note">
+                建議轉 NT${fmt(transfer.amount)} 是系統跨成員抵銷、用最少筆數還清的結果；差額由其他人的債務轉嫁而來。
+              </div>
+            )}
           </div>
         )}
         <div style={{ height: 8 }} />

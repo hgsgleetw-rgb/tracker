@@ -61,13 +61,41 @@ export default function SettleBreakdown({
                         {e.note ? `${cat?.label} · ` : ""}
                         {payer?.zh} 付 · 全額 NT${fmt(e.amount)}
                       </span>
+                      <span
+                        style={{
+                          display: "block",
+                          marginTop: 2,
+                          color: "var(--yr-fg-subtle)",
+                          fontSize: 11,
+                        }}
+                      >
+                        NT${fmt(e.amount)} ÷ {e.splitWith.length}人 = NT$
+                        {fmt(Math.round(e.amount / e.splitWith.length))}/人
+                      </span>
                     </div>
                   </div>
                   <div
-                    className={`net ${signed >= 0 ? "neg" : "pos"}`}
-                    style={{ fontWeight: 700, minWidth: 64, textAlign: "right" }}
+                    style={{
+                      fontWeight: 700,
+                      minWidth: 72,
+                      textAlign: "right",
+                      color:
+                        signed >= 0
+                          ? "var(--yr-brand-600)"
+                          : "var(--yr-fg-muted)",
+                    }}
                   >
-                    {signed >= 0 ? "+" : "−"}NT${fmt(Math.abs(signed))}
+                    <span
+                      style={{
+                        display: "block",
+                        fontSize: 10,
+                        fontWeight: 600,
+                        opacity: 0.75,
+                      }}
+                    >
+                      {signed >= 0 ? "分擔" : "已抵"}
+                    </span>
+                    NT${fmt(Math.abs(signed))}
                   </div>
                 </div>
               );
